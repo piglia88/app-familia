@@ -16,6 +16,10 @@ const firebaseConfig = {
   storageBucket: "app-familia-2ebff.firebasestorage.app",
   messagingSenderId: "675531086251",
   appId: "1:675531086251:web:4ed44dec0d7c032e6d5aee",
+  eventos_familia: [
+    {id:1, nombre:"Cumple Gennaro", fecha:"2027-02-11", tipo:"cumple", nota:""},
+    {id:2, nombre:"Cumple Francesco", fecha:"2026-11-11", tipo:"cumple", nota:""},
+  ],
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
@@ -27,6 +31,18 @@ const db = getFirestore(firebaseApp);
 const DATOS_INICIALES = {
   gennaro: {
     fiebre: [], comidas: [], vacunas: [], sueño: [],
+    jardin: {
+      nombre: "Jardín Barriletes",
+      sala: "Sala de 2",
+      horario: "Lunes a Viernes 8:00 - 16:30",
+      maestras: [{nombre:"Valeria",turno:"Mañana"},{nombre:"Agus",turno:"Tarde"}],
+      comidas: ["Desayuno","Almuerzo","Merienda"],
+      nota: "Lleva la comida de casa",
+      eventos: [],
+      tareas: [],
+      pagos: [],
+    },
+    agenda: [],
     medico: [
       {id:30,fecha:"2026-02-09",medico:"Dr. Santiago Rossi",motivo:"Control 24 meses",peso:"14.8",talla:"90",nota:"Pautas 24-30m: se quita zapatos, apila cubos, dice frases completas."},
       {id:29,fecha:"2025-09-15",medico:"Dr. Santiago Rossi",motivo:"Control 21 meses",peso:"13.05",talla:"85",nota:"Pautas 18-24m: dice frases de dos palabras, patea pelota."},
@@ -62,6 +78,18 @@ const DATOS_INICIALES = {
   },
   francesco: {
     fiebre: [], comidas: [], vacunas: [], sueño: [],
+    jardin: {
+      nombre: "Por definir",
+      sala: "Sala de 2",
+      horario: "Comienza Marzo 2027",
+      maestras: [],
+      comidas: [],
+      nota: "Comienza en Marzo 2027",
+      eventos: [],
+      tareas: [],
+      pagos: [],
+    },
+    agenda: [],
     medico: [
       {id:46,fecha:"2026-05-13",medico:"Dr. Santiago Rossi",motivo:"Control 6 meses",peso:"8.1",talla:"67.5",nota:"Perímetro cefálico: 43 cm."},
       {id:45,fecha:"2026-04-08",medico:"Dr. Santiago Rossi",motivo:"Control 4 meses",peso:"7.6",talla:"66",nota:"Perímetro cefálico: 43 cm."},
@@ -121,6 +149,12 @@ const MODULOS=[
   {id:"medico",label:"Médico & Turnos",icon:"👨‍⚕️"},
   {id:"sueño",label:"Sueño",icon:"😴"},
   {id:"crecimiento",label:"Peso & Talla",icon:"📈"},
+  {id:"jardin",label:"Jardín",icon:"🏫"},
+  {id:"agenda",label:"Agenda",icon:"📅"},
+];
+
+const MODULOS_FAMILIA=[
+  {id:"eventos",label:"Eventos Familiares",icon:"🎉"},
 ];
 
 const GUIA_ALIMENTACION = {
@@ -207,7 +241,7 @@ export default function App() {
     </div>
   );
 
-  if (!hijo) return <Inicio hijos={hijos} setHijo={setHijo} datos={datos} familiaFoto={familiaFoto} subirFotoFamilia={subirFotoFamilia} subirFoto={subirFoto} guardando={guardando}/>;
+  if (!hijo) return <Inicio hijos={hijos} setHijo={setHijo} datos={datos} familiaFoto={familiaFoto} subirFotoFamilia={subirFotoFamilia} subirFoto={subirFoto} guardando={guardando} setModulo={setModulo} eventosFamilia={datos.eventos_familia||[]} agregarEventoFamilia={(e)=>{const n={...datos,eventos_familia:[{id:Date.now(),...e},...(datos.eventos_familia||[])]};guardarDatos(n);}} borrarEventoFamilia={(id)=>{const n={...datos,eventos_familia:(datos.eventos_familia||[]).filter(x=>x.id!==id)};guardarDatos(n);}}/>;
   if (!modulo) return <MenuHijo hijo={hijoObj} setModulo={setModulo} setHijo={setHijo} datos={datos[hijo]} subirFoto={subirFoto} />;
 
   const props = {
@@ -226,6 +260,8 @@ export default function App() {
       {modulo==="vacunas" && <ModVacunas {...props}/>}
       {modulo==="medico" && <ModMedico {...props}/>}
       {modulo==="sueño" && <ModSueno {...props}/>}
+      {modulo==="jardin" && <ModJardin {...props} datos={datos[hijo].jardin||{}} agregar={(jardin)=>{const n={...datos};n[hijo].jardin=jardin;guardarDatos(n);}}/>}
+      {modulo==="agenda" && <ModAgenda {...props}/>}
       {modulo==="crecimiento" && <ModCrecimiento {...props}/>}
     </div>
   );
@@ -315,7 +351,12 @@ function Header({hijo,titulo,onBack}){
   );
 }
 
-function Inicio({hijos,setHijo,datos,familiaFoto,subirFotoFamilia,subirFoto,guardando}){
+function Inicio({hijos,setHijo,datos,familiaFoto,subirFotoFamilia,subirFoto,guardando,eventosFamilia,agregarEventoFamilia,borrarEventoFamilia}){
+  const [verEventos, setVerEventos] = useState(false);
+
+  if(verEventos) return <EventosFamilia datos={eventosFamilia||[]} agregar={agregarEventoFamilia} borrar={borrarEventoFamilia}/>;
+
+  const proxEvento = (eventosFamilia||[]).filter(e=>e.fecha>=inputFechaHoy()).sort((a,b)=>a.fecha>b.fecha?1:-1)[0];
   return (
     <div style={{fontFamily:"system-ui,sans-serif",maxWidth:420,margin:"0 auto",background:"#f8f9fb",minHeight:"100vh"}}>
       <div style={{background:"linear-gradient(135deg,#4F8EF7,#a78bfa)",padding:"28px 20px 24px"}}>
@@ -330,6 +371,18 @@ function Inicio({hijos,setHijo,datos,familiaFoto,subirFotoFamilia,subirFoto,guar
         </div>
       </div>
       <div style={{padding:"20px 16px"}}>
+        {proxEvento&&(
+          <div onClick={()=>setVerEventos(true)} style={{background:"linear-gradient(135deg,#a78bfa20,#ec489920)",borderRadius:14,padding:"12px 16px",marginBottom:14,cursor:"pointer",border:"1px solid #a78bfa30"}}>
+            <div style={{fontSize:12,color:"#a78bfa",fontWeight:700,marginBottom:2}}>🎉 Próximo evento familiar</div>
+            <div style={{fontWeight:700,fontSize:15}}>{proxEvento.nombre}</div>
+            <div style={{fontSize:12,color:"#888"}}>{formatFecha(proxEvento.fecha+"T12:00:00")}</div>
+          </div>
+        )}
+        {!proxEvento&&(
+          <div onClick={()=>setVerEventos(true)} style={{background:"#f0f0f0",borderRadius:14,padding:"12px 16px",marginBottom:14,cursor:"pointer",textAlign:"center"}}>
+            <span style={{fontSize:13,color:"#aaa"}}>🎉 Ver eventos familiares</span>
+          </div>
+        )}
         {hijos.map(h => {
           const d = datos[h.id] || {};
           const ultimaTemp = d.fiebre?.[0];
@@ -713,7 +766,238 @@ function ModCrecimiento({hijo,datos,agregar,borrar}){
   );
 }
 
-function MiniChart({datos,color}){
+function ModJardin({hijo, datos, agregar}) {
+  const [editInfo, setEditInfo] = useState(false);
+  const [form, setForm] = useState({tipo:"evento", texto:"", fecha:inputFechaHoy(), nota:""});
+  const [openForm, setOpenForm] = useState(false);
+  const s = t => setForm(f=>({...f,...t}));
+
+  const guardarItem = () => {
+    if(!form.texto) return;
+    const key = form.tipo === "evento" ? "eventos" : form.tipo === "tarea" ? "tareas" : "pagos";
+    const nuevo = {...datos, [key]: [{id:Date.now(), texto:form.texto, fecha:form.fecha, nota:form.nota, hecho:false}, ...(datos[key]||[])]};
+    agregar(nuevo);
+    setForm({tipo:"evento", texto:"", fecha:inputFechaHoy(), nota:""});
+    setOpenForm(false);
+  };
+
+  const toggleHecho = (key, id) => {
+    const nuevo = {...datos, [key]: datos[key].map(x => x.id===id ? {...x, hecho:!x.hecho} : x)};
+    agregar(nuevo);
+  };
+
+  const borrarItem = (key, id) => {
+    const nuevo = {...datos, [key]: datos[key].filter(x => x.id!==id)};
+    agregar(nuevo);
+  };
+
+  return (
+    <div style={{padding:16}}>
+      <Card style={{background:`${hijo.colorLight}`,border:`1.5px solid ${hijo.color}30`,marginBottom:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div>
+            <div style={{fontWeight:800,fontSize:17,color:hijo.color}}>{datos.nombre||"Jardín"}</div>
+            <div style={{fontSize:13,color:"#666",marginTop:2}}>{datos.sala}</div>
+            <div style={{fontSize:13,color:"#666"}}>⏰ {datos.horario}</div>
+            {datos.maestras?.map((m,i)=><div key={i} style={{fontSize:13,color:"#666"}}>👩‍🏫 {m.nombre} ({m.turno})</div>)}
+            {datos.comidas?.length>0&&<div style={{fontSize:13,color:"#666"}}>🍽️ {datos.comidas.join(", ")}</div>}
+            {datos.nota&&<div style={{fontSize:12,color:"#888",fontStyle:"italic",marginTop:4}}>{datos.nota}</div>}
+          </div>
+        </div>
+      </Card>
+
+      <Btn full color={hijo.color} onClick={()=>setOpenForm(!openForm)}>+ Agregar evento / tarea / pago</Btn>
+      {openForm&&(
+        <Card style={{marginTop:10}}>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:12,color:"#888",display:"block",marginBottom:6}}>Tipo</label>
+            <div style={{display:"flex",gap:6}}>
+              {["evento","tarea","pago"].map(t=><Chip key={t} active={form.tipo===t} onClick={()=>s({tipo:t})} color={hijo.color}>{t.charAt(0).toUpperCase()+t.slice(1)}</Chip>)}
+            </div>
+          </div>
+          <Inp label="Descripción" placeholder={form.tipo==="evento"?"Ej: Acto del Día de la Madre":form.tipo==="tarea"?"Ej: Llevar delantal":""} value={form.texto} onChange={e=>s({texto:e.target.value})}/>
+          <Inp label="Fecha" type="date" value={form.fecha} onChange={e=>s({fecha:e.target.value})}/>
+          <Inp label="Nota" placeholder="Detalles adicionales..." value={form.nota} onChange={e=>s({nota:e.target.value})}/>
+          <div style={{display:"flex",gap:8}}><Btn onClick={guardarItem} color={hijo.color} full>Guardar</Btn><Btn onClick={()=>setOpenForm(false)} secondary>Cancelar</Btn></div>
+        </Card>
+      )}
+
+      {["eventos","tareas","pagos"].map(key=>{
+        const items = (datos[key]||[]);
+        const pendientes = items.filter(x=>!x.hecho);
+        const hechos = items.filter(x=>x.hecho);
+        const icons = {eventos:"📅",tareas:"✅",pagos:"💰"};
+        const labels = {eventos:"Eventos",tareas:"Tareas",pagos:"Pagos"};
+        if(!items.length) return null;
+        return (
+          <div key={key} style={{marginTop:16}}>
+            <SectionLabel color={hijo.color}>{icons[key]} {labels[key]}</SectionLabel>
+            {pendientes.map(r=>(
+              <Card key={r.id}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                  <div style={{display:"flex",gap:10,alignItems:"flex-start",flex:1}}>
+                    <div onClick={()=>toggleHecho(key,r.id)} style={{width:22,height:22,borderRadius:6,border:`2px solid ${hijo.color}`,cursor:"pointer",flexShrink:0,marginTop:2}}/>
+                    <div>
+                      <div style={{fontWeight:600,fontSize:15}}>{r.texto}</div>
+                      {r.fecha&&<div style={{fontSize:12,color:"#aaa"}}>{formatFecha(r.fecha+"T12:00:00")}</div>}
+                      {r.nota&&<div style={{fontSize:12,color:"#888",fontStyle:"italic"}}>{r.nota}</div>}
+                    </div>
+                  </div>
+                  <button onClick={()=>borrarItem(key,r.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18}}>×</button>
+                </div>
+              </Card>
+            ))}
+            {hechos.map(r=>(
+              <Card key={r.id} style={{opacity:0.5}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                    <div onClick={()=>toggleHecho(key,r.id)} style={{width:22,height:22,borderRadius:6,background:hijo.color,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:14,flexShrink:0}}>✓</div>
+                    <div style={{textDecoration:"line-through",color:"#aaa",fontSize:14}}>{r.texto}</div>
+                  </div>
+                  <button onClick={()=>borrarItem(key,r.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18}}>×</button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ModAgenda({hijo, datos, agregar, borrar}) {
+  const [form, setForm] = useState({titulo:"", fecha:inputFechaHoy(), hora:"", tipo:"turno", nota:""});
+  const [open, setOpen] = useState(false);
+  const s = t => setForm(f=>({...f,...t}));
+  const guardar = () => {
+    if(!form.titulo) return;
+    agregar({...form, ts:hoyISO()});
+    setForm({titulo:"", fecha:inputFechaHoy(), hora:"", tipo:"turno", nota:""});
+    setOpen(false);
+  };
+  const proximos = datos.filter(d=>d.fecha>=inputFechaHoy()).sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const pasados = datos.filter(d=>d.fecha<inputFechaHoy()).sort((a,b)=>a.fecha<b.fecha?1:-1);
+  const iconTipo = {turno:"👨‍⚕️", evento:"📅", recordatorio:"🔔", otro:"📌"};
+  return (
+    <div style={{padding:16}}>
+      <Btn full color={hijo.color} onClick={()=>setOpen(!open)}>+ Agregar a la agenda</Btn>
+      {open&&(
+        <Card style={{marginTop:10}}>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:12,color:"#888",display:"block",marginBottom:6}}>Tipo</label>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+              {["turno","evento","recordatorio","otro"].map(t=><Chip key={t} active={form.tipo===t} onClick={()=>s({tipo:t})} color={hijo.color}>{iconTipo[t]} {t.charAt(0).toUpperCase()+t.slice(1)}</Chip>)}
+            </div>
+          </div>
+          <Inp label="Título" placeholder="Ej: Turno oftalmólogo, Comprar pañales..." value={form.titulo} onChange={e=>s({titulo:e.target.value})}/>
+          <div style={{display:"flex",gap:8}}>
+            <Inp label="Fecha" type="date" value={form.fecha} onChange={e=>s({fecha:e.target.value})}/>
+            <Inp label="Hora" type="time" value={form.hora} onChange={e=>s({hora:e.target.value})}/>
+          </div>
+          <Inp label="Nota" placeholder="Detalles..." value={form.nota} onChange={e=>s({nota:e.target.value})}/>
+          <div style={{display:"flex",gap:8}}><Btn onClick={guardar} color={hijo.color} full>Guardar</Btn><Btn onClick={()=>setOpen(false)} secondary>Cancelar</Btn></div>
+        </Card>
+      )}
+      {proximos.length>0&&<div style={{marginTop:16}}><SectionLabel color={hijo.color}>Próximos</SectionLabel>
+        {proximos.map(r=>(
+          <Card key={r.id} style={{borderLeft:`3px solid ${hijo.color}`}}>
+            <div style={{display:"flex",justifyContent:"space-between"}}>
+              <div>
+                <div style={{fontWeight:700,fontSize:15}}>{iconTipo[r.tipo]} {r.titulo}</div>
+                <div style={{fontSize:12,color:"#aaa"}}>{formatFecha(r.fecha+"T12:00:00")} {r.hora&&`• ${r.hora}hs`}</div>
+                {r.nota&&<div style={{fontSize:12,color:"#888",fontStyle:"italic"}}>{r.nota}</div>}
+              </div>
+              <button onClick={()=>borrar(r.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18}}>×</button>
+            </div>
+          </Card>
+        ))}
+      </div>}
+      {pasados.length>0&&<div style={{marginTop:16}}><SectionLabel color="#aaa">Pasados</SectionLabel>
+        {pasados.map(r=>(
+          <Card key={r.id} style={{opacity:0.6}}>
+            <div style={{display:"flex",justifyContent:"space-between"}}>
+              <div>
+                <div style={{fontWeight:600,fontSize:14}}>{iconTipo[r.tipo]} {r.titulo}</div>
+                <div style={{fontSize:12,color:"#aaa"}}>{formatFecha(r.fecha+"T12:00:00")} {r.hora&&`• ${r.hora}hs`}</div>
+              </div>
+              <button onClick={()=>borrar(r.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18}}>×</button>
+            </div>
+          </Card>
+        ))}
+      </div>}
+      {datos.length===0&&<Empty>Sin eventos en la agenda</Empty>}
+    </div>
+  );
+}
+
+function EventosFamilia({datos, agregar, borrar}) {
+  const [form, setForm] = useState({nombre:"", fecha:inputFechaHoy(), tipo:"evento", nota:""});
+  const [open, setOpen] = useState(false);
+  const s = t => setForm(f=>({...f,...t}));
+  const guardar = () => {
+    if(!form.nombre) return;
+    agregar({...form});
+    setForm({nombre:"", fecha:inputFechaHoy(), tipo:"evento", nota:""});
+    setOpen(false);
+  };
+  const sorted = [...datos].sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const iconTipo = {cumple:"🎂", evento:"🎉", vacaciones:"✈️", otro:"📌"};
+
+  const diasHasta = (fecha) => {
+    const hoy = new Date();
+    const f = new Date(fecha);
+    const diff = Math.ceil((f-hoy)/(864e5));
+    if(diff<0) return null;
+    if(diff===0) return "¡Hoy!";
+    if(diff===1) return "¡Mañana!";
+    return `en ${diff} días`;
+  };
+
+  return (
+    <div style={{fontFamily:"system-ui,sans-serif",maxWidth:420,margin:"0 auto",padding:16,background:"#f8f9fb",minHeight:"100vh"}}>
+      <div style={{background:"linear-gradient(135deg,#a78bfa,#ec4899)",padding:"20px",borderRadius:16,marginBottom:16}}>
+        <div style={{color:"#fff",fontWeight:800,fontSize:22}}>🎉 Eventos Familiares</div>
+        <div style={{color:"rgba(255,255,255,0.8)",fontSize:13,marginTop:4}}>Cumpleaños, vacaciones y fechas especiales</div>
+      </div>
+      <Btn full color="#a78bfa" onClick={()=>setOpen(!open)}>+ Agregar evento</Btn>
+      {open&&(
+        <Card style={{marginTop:10}}>
+          <Inp label="Nombre" placeholder="Ej: Cumple abuela Rosa, Vacaciones en Mar del Plata..." value={form.nombre} onChange={e=>s({nombre:e.target.value})}/>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:12,color:"#888",display:"block",marginBottom:6}}>Tipo</label>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+              {["cumple","evento","vacaciones","otro"].map(t=><Chip key={t} active={form.tipo===t} onClick={()=>s({tipo:t})} color="#a78bfa">{iconTipo[t]} {t.charAt(0).toUpperCase()+t.slice(1)}</Chip>)}
+            </div>
+          </div>
+          <Inp label="Fecha" type="date" value={form.fecha} onChange={e=>s({fecha:e.target.value})}/>
+          <Inp label="Nota" placeholder="Detalles..." value={form.nota} onChange={e=>s({nota:e.target.value})}/>
+          <div style={{display:"flex",gap:8}}><Btn onClick={guardar} color="#a78bfa" full>Guardar</Btn><Btn onClick={()=>setOpen(false)} secondary>Cancelar</Btn></div>
+        </Card>
+      )}
+      <div style={{marginTop:16}}>
+        {sorted.map(r=>{
+          const dias = diasHasta(r.fecha);
+          return (
+            <Card key={r.id} style={{borderLeft:`3px solid #a78bfa`}}>
+              <div style={{display:"flex",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontWeight:700,fontSize:15}}>{iconTipo[r.tipo]||"📌"} {r.nombre}</div>
+                  <div style={{fontSize:12,color:"#aaa"}}>{formatFecha(r.fecha+"T12:00:00")}</div>
+                  {dias&&<div style={{fontSize:12,color:"#a78bfa",fontWeight:600}}>{dias}</div>}
+                  {r.nota&&<div style={{fontSize:12,color:"#888",fontStyle:"italic"}}>{r.nota}</div>}
+                </div>
+                <button onClick={()=>borrar(r.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18}}>×</button>
+              </div>
+            </Card>
+          );
+        })}
+        {datos.length===0&&<Empty>Sin eventos familiares</Empty>}
+      </div>
+    </div>
+  );
+}
+
+
   if(!datos.length)return null;
   const vals=datos.map(d=>d.val);
   const min=Math.min(...vals),max=Math.max(...vals);
