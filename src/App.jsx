@@ -235,14 +235,31 @@ export default function App() {
 // COMPONENTES UI (igual que antes, resumidos)
 // ============================================================
 
+function comprimirFoto(file, maxSize=400) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if(w > h) { if(w > maxSize) { h = h*maxSize/w; w = maxSize; } }
+      else { if(h > maxSize) { w = w*maxSize/h; h = maxSize; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+}
+
 function FotoUpload({foto, onFoto, size=64, emoji, color}) {
   const ref = useRef();
-  const handleFile = e => {
+  const handleFile = async e => {
     const f = e.target.files[0];
     if(!f) return;
-    const r = new FileReader();
-    r.onload = ev => onFoto(ev.target.result);
-    r.readAsDataURL(f);
+    const comprimida = await comprimirFoto(f);
+    onFoto(comprimida);
   };
   return (
     <div onClick={()=>ref.current.click()} style={{width:size,height:size,borderRadius:"50%",background:color||"#eee",cursor:"pointer",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.4,flexShrink:0,border:"2.5px dashed rgba(255,255,255,0.5)"}}>
