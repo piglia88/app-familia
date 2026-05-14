@@ -1,14 +1,7 @@
-// ============================================================
-// App HIJOS - Versión Firebase
-// Archivo: src/App.jsx
-// ============================================================
-
 import { useState, useEffect, useRef } from "react";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
 
-
-// 🔥 TUS CREDENCIALES DE FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyCSK0q0NE4SCJop_-e9RJ9YvOFxGfQOxAk",
   authDomain: "app-familia-2ebff.firebaseapp.com",
@@ -16,50 +9,39 @@ const firebaseConfig = {
   storageBucket: "app-familia-2ebff.firebasestorage.app",
   messagingSenderId: "675531086251",
   appId: "1:675531086251:web:4ed44dec0d7c032e6d5aee",
-  eventos_familia: [
-    {id:1, nombre:"Cumple Gennaro", fecha:"2027-02-11", tipo:"cumple", nota:""},
-    {id:2, nombre:"Cumple Francesco", fecha:"2026-11-11", tipo:"cumple", nota:""},
-  ],
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 
-// ============================================================
-// DATOS INICIALES - Historial completo del pediatra
-// ============================================================
 const DATOS_INICIALES = {
   gennaro: {
-    fiebre: [], comidas: [], vacunas: [], sueño: [],
-    jardin: {
-      nombre: "Jardín Barriletes",
-      sala: "Sala de 2",
-      horario: "Lunes a Viernes 8:00 - 16:30",
-      maestras: [{nombre:"Valeria",turno:"Mañana"},{nombre:"Agus",turno:"Tarde"}],
-      comidas: ["Desayuno","Almuerzo","Merienda"],
-      nota: "Lleva la comida de casa",
-      eventos: [],
-      tareas: [],
-      pagos: [],
+    fiebre:[], comidas:[], vacunas:[], sueño:[], agenda:[],
+    jardin:{
+      nombre:"Jardín Barriletes", sala:"Sala de 2",
+      horario:"Lunes a Viernes 8:00 - 16:30",
+      maestras:[{nombre:"Valeria",turno:"Mañana"},{nombre:"Agus",turno:"Tarde"}],
+      comidas:["Desayuno","Almuerzo","Merienda"],
+      nota:"Lleva la comida de casa",
+      eventos:[], tareas:[], pagos:[],
     },
-    agenda: [],
-    medico: [
+    medico:[
       {id:30,fecha:"2026-02-09",medico:"Dr. Santiago Rossi",motivo:"Control 24 meses",peso:"14.8",talla:"90",nota:"Pautas 24-30m: se quita zapatos, apila cubos, dice frases completas."},
-      {id:29,fecha:"2025-09-15",medico:"Dr. Santiago Rossi",motivo:"Control 21 meses",peso:"13.05",talla:"85",nota:"Pautas 18-24m: dice frases de dos palabras, patea pelota."},
+      {id:29,fecha:"2025-09-15",medico:"Dr. Santiago Rossi",motivo:"Control 21 meses",peso:"13.05",talla:"85",nota:""},
       {id:28,fecha:"2025-08-11",medico:"Dr. Santiago Rossi",motivo:"Control 18 meses",peso:"12.8",talla:"84",nota:"Perímetro cefálico: 38.5 cm."},
       {id:27,fecha:"2025-05-05",medico:"Dr. Santiago Rossi",motivo:"Control 15 meses",peso:"12.1",talla:"81",nota:"Perímetro cefálico: 48 cm."},
       {id:26,fecha:"2025-02-03",medico:"Dr. Santiago Rossi",motivo:"Control 11 meses",peso:"11.3",talla:"77",nota:"Perímetro cefálico: 47 cm."},
       {id:25,fecha:"2024-09-23",medico:"Dr. Santiago Rossi",motivo:"Control 7 meses",peso:"10.2",talla:"71",nota:"Perímetro cefálico: 45.5 cm."},
       {id:24,fecha:"2024-07-15",medico:"Dr. Santiago Rossi",motivo:"Control 5 meses",peso:"8.9",talla:"66",nota:"Perímetro cefálico: 44 cm."},
-      {id:23,fecha:"2024-06-10",medico:"Dr. Santiago Rossi",motivo:"Control 4 meses",peso:"8",talla:"64",nota:"Perímetro cefálico: 42.5 cm."},
-      {id:22,fecha:"2024-05-13",medico:"Dr. Santiago Rossi",motivo:"Control 3 meses",peso:"7.15",talla:"61",nota:"Perímetro cefálico: 41.5 cm."},
-      {id:21,fecha:"2024-04-15",medico:"Dr. Santiago Rossi",motivo:"Control 2 meses",peso:"6",talla:"59.5",nota:"Perímetro cefálico: 39.5 cm."},
-      {id:20,fecha:"2024-03-18",medico:"Dr. Santiago Rossi",motivo:"Control 1 mes",peso:"4.7",talla:"54",nota:"Perímetro cefálico: 38 cm."},
+      {id:23,fecha:"2024-06-10",medico:"Dr. Santiago Rossi",motivo:"Control 4 meses",peso:"8",talla:"64",nota:""},
+      {id:22,fecha:"2024-05-13",medico:"Dr. Santiago Rossi",motivo:"Control 3 meses",peso:"7.15",talla:"61",nota:""},
+      {id:21,fecha:"2024-04-15",medico:"Dr. Santiago Rossi",motivo:"Control 2 meses",peso:"6",talla:"59.5",nota:""},
+      {id:20,fecha:"2024-03-18",medico:"Dr. Santiago Rossi",motivo:"Control 1 mes",peso:"4.7",talla:"54",nota:""},
       {id:19,fecha:"2024-03-04",medico:"Dr. Santiago Rossi",motivo:"Control 21 días",peso:"4",talla:"",nota:""},
       {id:18,fecha:"2024-02-26",medico:"Dr. Santiago Rossi",motivo:"Control 15 días",peso:"3.67",talla:"",nota:""},
       {id:17,fecha:"2024-02-19",medico:"Dr. Santiago Rossi",motivo:"Control 8 días",peso:"3.35",talla:"",nota:""},
     ],
-    crecimiento: [
+    crecimiento:[
       {id:16,fecha:"2026-02-09",peso:"14.8",talla:"90",nota:"Control 24m."},
       {id:15,fecha:"2025-09-15",peso:"13.05",talla:"85",nota:"Control 21m."},
       {id:14,fecha:"2025-08-11",peso:"12.8",talla:"84",nota:"Control 18m."},
@@ -77,27 +59,21 @@ const DATOS_INICIALES = {
     ],
   },
   francesco: {
-    fiebre: [], comidas: [], vacunas: [], sueño: [],
-    jardin: {
-      nombre: "Por definir",
-      sala: "Sala de 2",
-      horario: "Comienza Marzo 2027",
-      maestras: [],
-      comidas: [],
-      nota: "Comienza en Marzo 2027",
-      eventos: [],
-      tareas: [],
-      pagos: [],
+    fiebre:[], comidas:[], vacunas:[], sueño:[], agenda:[],
+    jardin:{
+      nombre:"Por definir", sala:"Sala de 2",
+      horario:"Comienza Marzo 2027",
+      maestras:[], comidas:[], nota:"Comienza en Marzo 2027",
+      eventos:[], tareas:[], pagos:[],
     },
-    agenda: [],
-    medico: [
+    medico:[
       {id:46,fecha:"2026-05-13",medico:"Dr. Santiago Rossi",motivo:"Control 6 meses",peso:"8.1",talla:"67.5",nota:"Perímetro cefálico: 43 cm."},
       {id:45,fecha:"2026-04-08",medico:"Dr. Santiago Rossi",motivo:"Control 4 meses",peso:"7.6",talla:"66",nota:"Perímetro cefálico: 43 cm."},
       {id:44,fecha:"2026-02-09",medico:"Dr. Santiago Rossi",motivo:"Control 3 meses",peso:"6.3",talla:"60.5",nota:"Perímetro cefálico: 40 cm."},
       {id:43,fecha:"2026-01-07",medico:"Dr. Santiago Rossi",motivo:"Control 1 mes",peso:"5.2",talla:"58",nota:"Perímetro cefálico: 40 cm."},
       {id:42,fecha:"2025-11-17",medico:"Dr. Santiago Rossi",motivo:"Control 6 días",peso:"2.95",talla:"",nota:"Primer control neonatal."},
     ],
-    crecimiento: [
+    crecimiento:[
       {id:41,fecha:"2026-05-13",peso:"8.1",talla:"67.5",nota:"Control 6m."},
       {id:40,fecha:"2026-04-08",peso:"7.6",talla:"66",nota:"Control 4m."},
       {id:39,fecha:"2026-02-09",peso:"6.3",talla:"60.5",nota:"Control 3m."},
@@ -105,22 +81,26 @@ const DATOS_INICIALES = {
       {id:37,fecha:"2025-11-17",peso:"2.95",talla:"",nota:"6 días."},
     ],
   },
+  eventos_familia:[
+    {id:1,nombre:"Cumple Gennaro",fecha:"2027-02-11",tipo:"cumple",nota:""},
+    {id:2,nombre:"Cumple Francesco",fecha:"2026-11-11",tipo:"cumple",nota:""},
+  ],
 };
 
 const DEFAULT_HIJOS = [
-  { id: "gennaro", nombre: "Gennaro", nacimiento: "2023-02-11", color: "#4F8EF7", colorLight: "#EBF2FF", emoji: "👦", foto: null },
-  { id: "francesco", nombre: "Francesco", nacimiento: "2024-11-11", color: "#F7824F", colorLight: "#FFF2EB", emoji: "👶", foto: null },
+  {id:"gennaro",nombre:"Gennaro",nacimiento:"2023-02-11",color:"#4F8EF7",colorLight:"#EBF2FF",emoji:"👦",foto:null},
+  {id:"francesco",nombre:"Francesco",nacimiento:"2024-11-11",color:"#F7824F",colorLight:"#FFF2EB",emoji:"👶",foto:null},
 ];
 
 function calcularEdad(nac) {
-  const hoy = new Date(), n = new Date(nac);
-  const m = (hoy.getFullYear()-n.getFullYear())*12+(hoy.getMonth()-n.getMonth());
+  const hoy=new Date(),n=new Date(nac);
+  const m=(hoy.getFullYear()-n.getFullYear())*12+(hoy.getMonth()-n.getMonth());
   if(m<12) return `${m} meses`;
   const a=Math.floor(m/12),r=m%12;
   return r>0?`${a}a ${r}m`:`${a} años`;
 }
 function diasParaCumple(nac) {
-  const hoy=new Date(), n=new Date(nac);
+  const hoy=new Date(),n=new Date(nac);
   const p=new Date(hoy.getFullYear(),n.getMonth(),n.getDate());
   if(p<hoy) p.setFullYear(hoy.getFullYear()+1);
   const d=Math.ceil((p-hoy)/(864e5));
@@ -153,123 +133,11 @@ const MODULOS=[
   {id:"agenda",label:"Agenda",icon:"📅"},
 ];
 
-const MODULOS_FAMILIA=[
-  {id:"eventos",label:"Eventos Familiares",icon:"🎉"},
-];
-
 const GUIA_ALIMENTACION = {
-  "6 meses": { color:"#F7824F", items:["Puré de zapallo, zanahoria, calabaza (con aceite)","Cereales de arroz o maíz, polenta","Banana pisada, manzana rallada, puré de durazno o pera"] },
-  "7-9 meses": { color:"#f59e0b", items:["Puré de carne de vaca o pollo sin piel","Cereales de trigo, avena, fideos cabello de ángel","Condimentar con aceite, queso crema, ricota"] },
-  "10-12 meses": { color:"#22c55e", items:["Otras carnes y pastas","Guisos livianos","Frutas y vegetales trozados","Pan fresco, galletitas Vocación o Manón"] },
+  "6 meses":{color:"#F7824F",items:["Puré de zapallo, zanahoria, calabaza (con aceite)","Cereales de arroz o maíz, polenta","Banana pisada, manzana rallada, puré de durazno o pera"]},
+  "7-9 meses":{color:"#f59e0b",items:["Puré de carne de vaca o pollo sin piel","Cereales de trigo, avena, fideos cabello de ángel","Condimentar con aceite, queso crema, ricota"]},
+  "10-12 meses":{color:"#22c55e",items:["Otras carnes y pastas","Guisos livianos","Frutas y vegetales trozados","Pan fresco, galletitas Vocación o Manón"]},
 };
-
-// ============================================================
-// COMPONENTE PRINCIPAL
-// ============================================================
-export default function App() {
-  const [hijos, setHijos] = useState(DEFAULT_HIJOS);
-  const [datos, setDatos] = useState(DATOS_INICIALES);
-  const [familiaFoto, setFamiliaFoto] = useState(null);
-  const [hijo, setHijo] = useState(null);
-  const [modulo, setModulo] = useState(null);
-  const [cargando, setCargando] = useState(true);
-  const [guardando, setGuardando] = useState(false);
-
-  // Escuchar cambios en Firebase en tiempo real
-  useEffect(() => {
-    const unsubDatos = onSnapshot(doc(db, "app", "datos"), (snap) => {
-      if (snap.exists()) setDatos(snap.data());
-      setCargando(false);
-    }, () => setCargando(false));
-
-    const unsubPerfiles = onSnapshot(doc(db, "app", "perfiles"), (snap) => {
-      if (snap.exists()) {
-        setHijos(snap.data().hijos || DEFAULT_HIJOS);
-        setFamiliaFoto(snap.data().familiaFoto || null);
-      }
-    });
-
-    return () => { unsubDatos(); unsubPerfiles(); };
-  }, []);
-
-  const guardarDatos = async (nuevosDatos) => {
-    setDatos(nuevosDatos);
-    setGuardando(true);
-    try {
-      await setDoc(doc(db, "app", "datos"), nuevosDatos);
-    } catch(e) { console.error(e); }
-    setGuardando(false);
-  };
-
-  const guardarPerfiles = async (nuevosHijos, nuevaFoto) => {
-    const h = nuevosHijos || hijos;
-    const f = nuevaFoto !== undefined ? nuevaFoto : familiaFoto;
-    setHijos(h);
-    if(nuevaFoto !== undefined) setFamiliaFoto(f);
-    try {
-      await setDoc(doc(db, "app", "perfiles"), { hijos: h, familiaFoto: f });
-    } catch(e) { console.error(e); }
-  };
-
-  const subirFoto = async (id, base64) => {
-    const nuevosHijos = hijos.map(h => h.id === id ? {...h, foto: base64} : h);
-    guardarPerfiles(nuevosHijos, undefined);
-  };
-
-  const subirFotoFamilia = async (base64) => {
-    guardarPerfiles(undefined, base64);
-  };
-
-  const agregarDato = (mod, item) => {
-    const n = {...datos};
-    n[hijo][mod] = [{id: Date.now(), ...item}, ...n[hijo][mod]];
-    guardarDatos(n);
-  };
-
-  const borrarDato = (mod, id) => {
-    const n = {...datos};
-    n[hijo][mod] = n[hijo][mod].filter(x => x.id !== id);
-    guardarDatos(n);
-  };
-
-  const hijoObj = hijos.find(h => h.id === hijo);
-
-  if (cargando) return (
-    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",flexDirection:"column",gap:16}}>
-      <div style={{fontSize:40}}>👨‍👦‍👦</div>
-      <div style={{fontFamily:"system-ui",fontSize:16,color:"#888"}}>Cargando App HIJOS...</div>
-    </div>
-  );
-
-  if (!hijo) return <Inicio hijos={hijos} setHijo={setHijo} datos={datos} familiaFoto={familiaFoto} subirFotoFamilia={subirFotoFamilia} subirFoto={subirFoto} guardando={guardando} setModulo={setModulo} eventosFamilia={datos.eventos_familia||[]} agregarEventoFamilia={(e)=>{const n={...datos,eventos_familia:[{id:Date.now(),...e},...(datos.eventos_familia||[])]};guardarDatos(n);}} borrarEventoFamilia={(id)=>{const n={...datos,eventos_familia:(datos.eventos_familia||[]).filter(x=>x.id!==id)};guardarDatos(n);}}/>;
-  if (!modulo) return <MenuHijo hijo={hijoObj} setModulo={setModulo} setHijo={setHijo} datos={datos[hijo]} subirFoto={subirFoto} />;
-
-  const props = {
-    hijo: hijoObj,
-    datos: datos[hijo][modulo] || [],
-    agregar: (i) => agregarDato(modulo, i),
-    borrar: (id) => borrarDato(modulo, id),
-    guardando,
-  };
-
-  return (
-    <div style={{fontFamily:"system-ui,sans-serif",maxWidth:420,margin:"0 auto",paddingBottom:80}}>
-      <Header hijo={hijoObj} titulo={MODULOS.find(m=>m.id===modulo)?.icon+" "+MODULOS.find(m=>m.id===modulo)?.label} onBack={()=>setModulo(null)} />
-      {modulo==="fiebre" && <ModFiebre {...props}/>}
-      {modulo==="comidas" && <ModComidas {...props}/>}
-      {modulo==="vacunas" && <ModVacunas {...props}/>}
-      {modulo==="medico" && <ModMedico {...props}/>}
-      {modulo==="sueño" && <ModSueno {...props}/>}
-      {modulo==="jardin" && <ModJardin {...props} datos={datos[hijo].jardin||{}} agregar={(jardin)=>{const n={...datos};n[hijo].jardin=jardin;guardarDatos(n);}}/>}
-      {modulo==="agenda" && <ModAgenda {...props}/>}
-      {modulo==="crecimiento" && <ModCrecimiento {...props}/>}
-    </div>
-  );
-}
-
-// ============================================================
-// COMPONENTES UI (igual que antes, resumidos)
-// ============================================================
 
 function comprimirFoto(file) {
   return new Promise(resolve => {
@@ -278,29 +146,136 @@ function comprimirFoto(file) {
     img.onload = () => {
       const canvas = document.createElement('canvas');
       const maxSize = 150;
-      let w = img.width, h = img.height;
-      if(w > h) { h = Math.round(h*maxSize/w); w = maxSize; }
-      else { w = Math.round(w*maxSize/h); h = maxSize; }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', 0.5));
+      let w=img.width, h=img.height;
+      if(w>h){h=Math.round(h*maxSize/w);w=maxSize;}
+      else{w=Math.round(w*maxSize/h);h=maxSize;}
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg',0.5));
       URL.revokeObjectURL(url);
     };
-    img.src = url;
+    img.src=url;
   });
 }
 
-function FotoUpload({foto, onFoto, size=64, emoji, color}) {
-  const ref = useRef();
-  const handleFile = async e => {
-    const f = e.target.files[0];
+export default function App() {
+  const [hijos,setHijos]=useState(DEFAULT_HIJOS);
+  const [datos,setDatos]=useState(DATOS_INICIALES);
+  const [familiaFoto,setFamiliaFoto]=useState(null);
+  const [hijo,setHijo]=useState(null);
+  const [modulo,setModulo]=useState(null);
+  const [cargando,setCargando]=useState(true);
+  const [guardando,setGuardando]=useState(false);
+  const [verEventos,setVerEventos]=useState(false);
+
+  useEffect(()=>{
+    const unsubDatos=onSnapshot(doc(db,"app","datos"),(snap)=>{
+      if(snap.exists()) setDatos(snap.data());
+      setCargando(false);
+    },()=>setCargando(false));
+    const unsubPerfiles=onSnapshot(doc(db,"app","perfiles"),(snap)=>{
+      if(snap.exists()){
+        setHijos(snap.data().hijos||DEFAULT_HIJOS);
+        setFamiliaFoto(snap.data().familiaFoto||null);
+      }
+    });
+    return ()=>{unsubDatos();unsubPerfiles();};
+  },[]);
+
+  const guardarDatos=async(nuevosDatos)=>{
+    setDatos(nuevosDatos);
+    setGuardando(true);
+    try{ await setDoc(doc(db,"app","datos"),nuevosDatos); }catch(e){}
+    setGuardando(false);
+  };
+
+  const guardarPerfiles=async(nuevosHijos,nuevaFoto)=>{
+    const h=nuevosHijos||hijos;
+    const f=nuevaFoto!==undefined?nuevaFoto:familiaFoto;
+    setHijos(h);
+    if(nuevaFoto!==undefined) setFamiliaFoto(f);
+    try{ await setDoc(doc(db,"app","perfiles"),{hijos:h,familiaFoto:f}); }catch(e){}
+  };
+
+  const subirFoto=async(id,base64)=>{
+    const nuevosHijos=hijos.map(h=>h.id===id?{...h,foto:base64}:h);
+    guardarPerfiles(nuevosHijos,undefined);
+  };
+
+  const subirFotoFamilia=async(base64)=>{
+    guardarPerfiles(undefined,base64);
+  };
+
+  const agregarDato=(mod,item)=>{
+    const n={...datos};
+    n[hijo][mod]=[{id:Date.now(),...item},...n[hijo][mod]];
+    guardarDatos(n);
+  };
+
+  const borrarDato=(mod,id)=>{
+    const n={...datos};
+    n[hijo][mod]=n[hijo][mod].filter(x=>x.id!==id);
+    guardarDatos(n);
+  };
+
+  const agregarEventoFamilia=(e)=>{
+    const n={...datos,eventos_familia:[{id:Date.now(),...e},...(datos.eventos_familia||[])]};
+    guardarDatos(n);
+  };
+
+  const borrarEventoFamilia=(id)=>{
+    const n={...datos,eventos_familia:(datos.eventos_familia||[]).filter(x=>x.id!==id)};
+    guardarDatos(n);
+  };
+
+  const hijoObj=hijos.find(h=>h.id===hijo);
+
+  if(cargando) return(
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",flexDirection:"column",gap:16}}>
+      <div style={{fontSize:40}}>👨‍👦‍👦</div>
+      <div style={{fontFamily:"system-ui",fontSize:16,color:"#888"}}>Cargando App HIJOS...</div>
+    </div>
+  );
+
+  if(verEventos) return <EventosFamilia datos={datos.eventos_familia||[]} agregar={agregarEventoFamilia} borrar={borrarEventoFamilia} onBack={()=>setVerEventos(false)}/>;
+
+  if(!hijo) return <Inicio hijos={hijos} setHijo={setHijo} datos={datos} familiaFoto={familiaFoto} subirFotoFamilia={subirFotoFamilia} subirFoto={subirFoto} guardando={guardando} setVerEventos={setVerEventos} eventosFamilia={datos.eventos_familia||[]}/>;
+  if(!modulo) return <MenuHijo hijo={hijoObj} setModulo={setModulo} setHijo={setHijo} datos={datos[hijo]} subirFoto={subirFoto}/>;
+
+  const props={
+    hijo:hijoObj,
+    datos:datos[hijo][modulo]||[],
+    agregar:(i)=>agregarDato(modulo,i),
+    borrar:(id)=>borrarDato(modulo,id),
+    guardando,
+  };
+
+  return(
+    <div style={{fontFamily:"system-ui,sans-serif",maxWidth:420,margin:"0 auto",paddingBottom:80}}>
+      <Header hijo={hijoObj} titulo={MODULOS.find(m=>m.id===modulo)?.icon+" "+MODULOS.find(m=>m.id===modulo)?.label} onBack={()=>setModulo(null)}/>
+      {modulo==="fiebre"&&<ModFiebre {...props}/>}
+      {modulo==="comidas"&&<ModComidas {...props}/>}
+      {modulo==="vacunas"&&<ModVacunas {...props}/>}
+      {modulo==="medico"&&<ModMedico {...props}/>}
+      {modulo==="sueño"&&<ModSueno {...props}/>}
+      {modulo==="crecimiento"&&<ModCrecimiento {...props}/>}
+      {modulo==="jardin"&&<ModJardin hijo={hijoObj} datos={datos[hijo].jardin||{}} agregar={(jardin)=>{const n={...datos};n[hijo].jardin=jardin;guardarDatos(n);}}/>}
+      {modulo==="agenda"&&<ModAgenda {...props}/>}
+    </div>
+  );
+}
+
+function FotoUpload({foto,onFoto,size=64,emoji,color}){
+  const ref=useRef();
+  const handleFile=async e=>{
+    const f=e.target.files[0];
     if(!f) return;
-    const comprimida = await comprimirFoto(f);
+    const comprimida=await comprimirFoto(f);
     onFoto(comprimida);
   };
-  return (
+  return(
     <div onClick={()=>ref.current.click()} style={{width:size,height:size,borderRadius:"50%",background:color||"#eee",cursor:"pointer",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.4,flexShrink:0,border:"2.5px dashed rgba(255,255,255,0.5)"}}>
-      {foto ? <img src={foto} style={{width:"100%",height:"100%",objectFit:"cover"}} alt="foto"/> : <span>{emoji||"📷"}</span>}
+      {foto?<img src={foto} style={{width:"100%",height:"100%",objectFit:"cover"}} alt="foto"/>:<span>{emoji||"📷"}</span>}
       <input ref={ref} type="file" accept="image/*" style={{display:"none"}} onChange={handleFile}/>
     </div>
   );
@@ -309,38 +284,31 @@ function FotoUpload({foto, onFoto, size=64, emoji, color}) {
 function Badge({children,color,bg}){
   return <span style={{fontSize:12,background:bg,color,padding:"3px 10px",borderRadius:20,fontWeight:600}}>{children}</span>;
 }
-
 function Card({children,style}){
   return <div style={{background:"#fff",borderRadius:14,padding:"16px",border:"1px solid #f0f0f0",marginBottom:10,...style}}>{children}</div>;
 }
-
 function Inp({label,...props}){
-  return (
+  return(
     <div style={{marginBottom:12}}>
       {label&&<label style={{fontSize:12,color:"#888",display:"block",marginBottom:4}}>{label}</label>}
       <input style={{width:"100%",padding:"10px 12px",borderRadius:10,border:"1.5px solid #e5e5e5",fontSize:15,boxSizing:"border-box",outline:"none"}} {...props}/>
     </div>
   );
 }
-
 function Btn({children,onClick,color="#4F8EF7",full,secondary}){
   return <button onClick={onClick} style={{background:secondary?"#f5f5f5":color,color:secondary?"#555":"#fff",border:"none",borderRadius:12,padding:"12px 20px",fontWeight:700,fontSize:15,cursor:"pointer",width:full?"100%":"auto"}}>{children}</button>;
 }
-
 function Chip({children,active,onClick,color}){
   return <button onClick={onClick} style={{padding:"5px 12px",borderRadius:20,border:`1.5px solid ${active?color:"#e5e5e5"}`,background:active?color:"#fff",color:active?"#fff":"#555",fontSize:13,cursor:"pointer",fontWeight:active?600:400}}>{children}</button>;
 }
-
 function Empty({children}){
   return <div style={{textAlign:"center",color:"#bbb",padding:"32px 0",fontSize:14}}>{children}</div>;
 }
-
 function SectionLabel({children,color}){
   return <div style={{fontSize:12,fontWeight:700,color,marginBottom:8,textTransform:"uppercase",letterSpacing:.5}}>{children}</div>;
 }
-
 function Header({hijo,titulo,onBack}){
-  return (
+  return(
     <div style={{background:hijo.color,padding:"16px 20px",display:"flex",alignItems:"center",gap:12}}>
       <button onClick={onBack} style={{background:"rgba(255,255,255,0.25)",border:"none",borderRadius:10,width:36,height:36,cursor:"pointer",fontSize:18,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
       <div style={{flex:1}}>
@@ -351,13 +319,9 @@ function Header({hijo,titulo,onBack}){
   );
 }
 
-function Inicio({hijos,setHijo,datos,familiaFoto,subirFotoFamilia,subirFoto,guardando,eventosFamilia,agregarEventoFamilia,borrarEventoFamilia}){
-  const [verEventos, setVerEventos] = useState(false);
-
-  if(verEventos) return <EventosFamilia datos={eventosFamilia||[]} agregar={agregarEventoFamilia} borrar={borrarEventoFamilia}/>;
-
-  const proxEvento = (eventosFamilia||[]).filter(e=>e.fecha>=inputFechaHoy()).sort((a,b)=>a.fecha>b.fecha?1:-1)[0];
-  return (
+function Inicio({hijos,setHijo,datos,familiaFoto,subirFotoFamilia,subirFoto,guardando,setVerEventos,eventosFamilia}){
+  const proxEvento=(eventosFamilia||[]).filter(e=>e.fecha>=inputFechaHoy()).sort((a,b)=>a.fecha>b.fecha?1:-1)[0];
+  return(
     <div style={{fontFamily:"system-ui,sans-serif",maxWidth:420,margin:"0 auto",background:"#f8f9fb",minHeight:"100vh"}}>
       <div style={{background:"linear-gradient(135deg,#4F8EF7,#a78bfa)",padding:"28px 20px 24px"}}>
         <div style={{display:"flex",alignItems:"center",gap:14}}>
@@ -365,30 +329,28 @@ function Inicio({hijos,setHijo,datos,familiaFoto,subirFotoFamilia,subirFoto,guar
           <div>
             <h1 style={{margin:0,fontSize:26,fontWeight:800,color:"#fff"}}>App HIJOS</h1>
             <p style={{margin:"2px 0 0",color:"rgba(255,255,255,0.8)",fontSize:12}}>
-              {guardando ? "💾 Guardando..." : "✅ Sincronizado con Marina"}
+              {guardando?"💾 Guardando...":"✅ Sincronizado con Marina"}
             </p>
           </div>
         </div>
       </div>
       <div style={{padding:"20px 16px"}}>
-        {proxEvento&&(
-          <div onClick={()=>setVerEventos(true)} style={{background:"linear-gradient(135deg,#a78bfa20,#ec489920)",borderRadius:14,padding:"12px 16px",marginBottom:14,cursor:"pointer",border:"1px solid #a78bfa30"}}>
-            <div style={{fontSize:12,color:"#a78bfa",fontWeight:700,marginBottom:2}}>🎉 Próximo evento familiar</div>
-            <div style={{fontWeight:700,fontSize:15}}>{proxEvento.nombre}</div>
-            <div style={{fontSize:12,color:"#888"}}>{formatFecha(proxEvento.fecha+"T12:00:00")}</div>
-          </div>
-        )}
-        {!proxEvento&&(
-          <div onClick={()=>setVerEventos(true)} style={{background:"#f0f0f0",borderRadius:14,padding:"12px 16px",marginBottom:14,cursor:"pointer",textAlign:"center"}}>
-            <span style={{fontSize:13,color:"#aaa"}}>🎉 Ver eventos familiares</span>
-          </div>
-        )}
-        {hijos.map(h => {
-          const d = datos[h.id] || {};
-          const ultimaTemp = d.fiebre?.[0];
-          const proxTurno = d.medico?.filter(x=>x.fecha>=inputFechaHoy()).sort((a,b)=>a.fecha>b.fecha?1:-1)[0];
-          const ultimoPeso = d.crecimiento?.[0];
-          return (
+        <div onClick={()=>setVerEventos(true)} style={{background:proxEvento?"linear-gradient(135deg,#a78bfa20,#ec489920)":"#f0f0f0",borderRadius:14,padding:"12px 16px",marginBottom:14,cursor:"pointer",border:"1px solid #a78bfa30",textAlign:proxEvento?"left":"center"}}>
+          {proxEvento?(
+            <>
+              <div style={{fontSize:12,color:"#a78bfa",fontWeight:700,marginBottom:2}}>🎉 Próximo evento familiar</div>
+              <div style={{fontWeight:700,fontSize:15}}>{proxEvento.nombre}</div>
+              <div style={{fontSize:12,color:"#888"}}>{formatFecha(proxEvento.fecha+"T12:00:00")}</div>
+            </>
+          ):<span style={{fontSize:13,color:"#aaa"}}>🎉 Ver eventos familiares</span>}
+        </div>
+        {hijos.map(h=>{
+          const d=datos[h.id]||{};
+          const ultimaTemp=d.fiebre?.[0];
+          const proxTurno=d.medico?.filter(x=>x.fecha>=inputFechaHoy()).sort((a,b)=>a.fecha>b.fecha?1:-1)[0];
+          const ultimoPeso=d.crecimiento?.[0];
+          const proxAgenda=d.agenda?.filter(x=>x.fecha>=inputFechaHoy()).sort((a,b)=>a.fecha>b.fecha?1:-1)[0];
+          return(
             <div key={h.id} onClick={()=>setHijo(h.id)} style={{background:"#fff",borderRadius:20,padding:"18px 20px",marginBottom:14,cursor:"pointer",boxShadow:"0 4px 20px rgba(0,0,0,0.07)",border:`2px solid ${h.color}20`}}>
               <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:12}}>
                 <FotoUpload foto={h.foto} onFoto={foto=>subirFoto(h.id,foto)} size={60} emoji={h.emoji} color={h.colorLight}/>
@@ -402,8 +364,8 @@ function Inicio({hijos,setHijo,datos,familiaFoto,subirFotoFamilia,subirFoto,guar
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {ultimaTemp&&<Badge color={getTempStatus(ultimaTemp.temp).color} bg={getTempStatus(ultimaTemp.temp).bg}>{getTempStatus(ultimaTemp.temp).label} {ultimaTemp.temp}°</Badge>}
                 {ultimoPeso&&<Badge color={h.color} bg={h.colorLight}>⚖️ {ultimoPeso.peso}kg</Badge>}
-                {proxTurno&&<Badge color="#4F8EF7" bg="#EBF2FF">👨‍⚕️ {proxTurno.fecha?formatFecha(proxTurno.fecha+"T12:00:00"):""}</Badge>}
-                {!ultimaTemp&&!proxTurno&&!ultimoPeso&&<span style={{fontSize:12,color:"#bbb"}}>Tocá para ver el historial</span>}
+                {proxTurno&&<Badge color="#4F8EF7" bg="#EBF2FF">👨‍⚕️ {formatFecha(proxTurno.fecha+"T12:00:00")}</Badge>}
+                {proxAgenda&&<Badge color="#a78bfa" bg="#f5f3ff">📅 {proxAgenda.titulo}</Badge>}
               </div>
             </div>
           );
@@ -414,7 +376,7 @@ function Inicio({hijos,setHijo,datos,familiaFoto,subirFotoFamilia,subirFoto,guar
 }
 
 function MenuHijo({hijo,setModulo,setHijo,datos,subirFoto}){
-  return (
+  return(
     <div style={{fontFamily:"system-ui,sans-serif",maxWidth:420,margin:"0 auto",background:"#f8f9fb",minHeight:"100vh"}}>
       <div style={{background:hijo.color,padding:"24px 20px 28px"}}>
         <button onClick={()=>setHijo(null)} style={{background:"rgba(255,255,255,0.2)",border:"none",borderRadius:10,padding:"6px 14px",color:"#fff",cursor:"pointer",fontSize:13,marginBottom:14}}>← Inicio</button>
@@ -429,9 +391,9 @@ function MenuHijo({hijo,setModulo,setHijo,datos,subirFoto}){
       </div>
       <div style={{padding:"16px"}}>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          {MODULOS.map(m => {
-            const count = datos[m.id]?.length||0;
-            return (
+          {MODULOS.map(m=>{
+            const count=datos[m.id]?.length||(m.id==="jardin"?1:0);
+            return(
               <div key={m.id} onClick={()=>setModulo(m.id)} style={{background:"#fff",borderRadius:16,padding:"18px 14px",cursor:"pointer",boxShadow:"0 2px 10px rgba(0,0,0,0.05)",border:"1px solid #f0f0f0"}}>
                 <div style={{fontSize:30,marginBottom:8}}>{m.icon}</div>
                 <div style={{fontWeight:700,fontSize:14,color:"#1a1a2e",lineHeight:1.2}}>{m.label}</div>
@@ -451,11 +413,11 @@ function ModFiebre({hijo,datos,agregar,borrar}){
   const s=t=>setForm(f=>({...f,...t}));
   const toggle=(arr,key,val)=>s({[key]:arr.includes(val)?arr.filter(x=>x!==val):[...arr,val]});
   const guardar=()=>{
-    if(!form.temp||isNaN(form.temp))return;
+    if(!form.temp||isNaN(form.temp)) return;
     agregar({temp:parseFloat(form.temp),nota:form.nota,meds:form.meds,sintomas:form.sintomas,ts:hoyISO()});
     setForm({temp:"",nota:"",meds:[],sintomas:[]});setOpen(false);
   };
-  return (
+  return(
     <div style={{padding:16}}>
       {datos.length>0&&(
         <Card style={{background:"#fafafa",marginBottom:14}}>
@@ -464,7 +426,7 @@ function ModFiebre({hijo,datos,agregar,borrar}){
             {datos.slice(0,6).slice().reverse().map(r=>{
               const h=Math.max(((r.temp-36)/4)*60,8);
               const st=getTempStatus(r.temp);
-              return (
+              return(
                 <div key={r.id} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
                   <div style={{fontSize:10,color:st.color,fontWeight:700}}>{r.temp}</div>
                   <div style={{width:"100%",height:h,background:st.color,borderRadius:4,opacity:.85}}/>
@@ -494,7 +456,7 @@ function ModFiebre({hijo,datos,agregar,borrar}){
       <div style={{marginTop:16}}>
         {datos.map(r=>{
           const st=getTempStatus(r.temp);
-          return (
+          return(
             <Card key={r.id}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                 <div>
@@ -526,7 +488,7 @@ function ModComidas({hijo,datos,agregar,borrar}){
   const guardar=()=>{if(!form.tipo)return;agregar({tipo:form.tipo,cantidad:form.cantidad,nota:form.nota,ts:hoyISO()});setForm({tipo:"",cantidad:"",nota:""});setOpen(false);};
   const esFrancesco=hijo.id==="francesco";
   const hoy=datos.filter(d=>d.ts&&d.ts.startsWith(inputFechaHoy()));
-  return (
+  return(
     <div style={{padding:16}}>
       {hoy.length>0&&<Card style={{background:"#fafafa",marginBottom:14}}><div style={{fontSize:12,color:"#888",marginBottom:6}}>Hoy ({hoy.length} veces)</div><div style={{display:"flex",flexWrap:"wrap",gap:6}}>{hoy.map(r=><Badge key={r.id} color={hijo.color} bg={hijo.colorLight}>{r.tipo}</Badge>)}</div></Card>}
       {esFrancesco&&(
@@ -585,7 +547,7 @@ function ModVacunas({hijo,datos,agregar,borrar}){
   const [open,setOpen]=useState(false);
   const s=t=>setForm(f=>({...f,...t}));
   const guardar=()=>{if(!form.nombre)return;agregar({...form});setForm({nombre:"",fecha:inputFechaHoy(),proxima:"",nota:""});setOpen(false);};
-  return (
+  return(
     <div style={{padding:16}}>
       <Btn full color={hijo.color} onClick={()=>setOpen(!open)}>+ Agregar vacuna</Btn>
       {open&&(
@@ -627,7 +589,7 @@ function ModMedico({hijo,datos,agregar,borrar}){
   const guardar=()=>{if(!form.fecha)return;agregar({...form});setForm({fecha:inputFechaHoy(),medico:"",motivo:"",peso:"",talla:"",nota:""});setOpen(false);};
   const proximos=datos.filter(d=>d.fecha>=inputFechaHoy()).sort((a,b)=>a.fecha>b.fecha?1:-1);
   const pasados=datos.filter(d=>d.fecha<inputFechaHoy()).sort((a,b)=>a.fecha<b.fecha?1:-1);
-  return (
+  return(
     <div style={{padding:16}}>
       <Btn full color={hijo.color} onClick={()=>setOpen(!open)}>+ Agregar turno / consulta</Btn>
       {open&&(
@@ -651,7 +613,7 @@ function ModMedico({hijo,datos,agregar,borrar}){
 }
 
 function TurnoCard({r,hijo,borrar}){
-  return (
+  return(
     <Card>
       <div style={{display:"flex",justifyContent:"space-between"}}>
         <div>
@@ -678,7 +640,7 @@ function ModSueno({hijo,datos,agregar,borrar}){
     const h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000);
     return `${h}h ${m}m`;
   };
-  return (
+  return(
     <div style={{padding:16}}>
       <Btn full color={hijo.color} onClick={()=>setOpen(!open)}>+ Registrar sueño</Btn>
       {open&&(
@@ -719,7 +681,7 @@ function ModCrecimiento({hijo,datos,agregar,borrar}){
   const sorted=[...datos].sort((a,b)=>a.fecha>b.fecha?1:-1);
   const conPeso=sorted.filter(d=>d.peso);
   const conTalla=sorted.filter(d=>d.talla);
-  return (
+  return(
     <div style={{padding:16}}>
       {conPeso.length>1&&(
         <Card style={{background:"#fafafa",marginBottom:14}}>
@@ -741,7 +703,7 @@ function ModCrecimiento({hijo,datos,agregar,borrar}){
             <Inp label="Peso (kg)" type="number" step="0.1" placeholder="10.5" value={form.peso} onChange={e=>s({peso:e.target.value})}/>
             <Inp label="Talla (cm)" type="number" placeholder="75" value={form.talla} onChange={e=>s({talla:e.target.value})}/>
           </div>
-          <Inp label="Nota" placeholder="Control, vacuna..." value={form.nota} onChange={e=>s({nota:e.target.value})}/>
+          <Inp label="Nota" value={form.nota} onChange={e=>s({nota:e.target.value})}/>
           <div style={{display:"flex",gap:8}}><Btn onClick={guardar} color={hijo.color} full>Guardar</Btn><Btn onClick={()=>setOpen(false)} secondary>Cancelar</Btn></div>
         </Card>
       )}
@@ -752,7 +714,7 @@ function ModCrecimiento({hijo,datos,agregar,borrar}){
               <div>
                 <div style={{fontWeight:700,fontSize:15}}>📏 {r.fecha?formatFecha(r.fecha+"T12:00:00"):"-"}</div>
                 <div style={{fontSize:14,color:hijo.color,fontWeight:600}}>
-                  {r.peso?`⚖️ ${r.peso} kg`:""} {r.talla?`• 📏 ${r.talla} cm`:""}
+                  {r.peso?`⚖️ ${r.peso} kg`:""}{r.talla?` • 📏 ${r.talla} cm`:""}
                 </div>
                 {r.nota&&<div style={{fontSize:12,color:"#888",fontStyle:"italic"}}>{r.nota}</div>}
               </div>
@@ -766,46 +728,36 @@ function ModCrecimiento({hijo,datos,agregar,borrar}){
   );
 }
 
-function ModJardin({hijo, datos, agregar}) {
-  const [editInfo, setEditInfo] = useState(false);
-  const [form, setForm] = useState({tipo:"evento", texto:"", fecha:inputFechaHoy(), nota:""});
-  const [openForm, setOpenForm] = useState(false);
-  const s = t => setForm(f=>({...f,...t}));
-
-  const guardarItem = () => {
+function ModJardin({hijo,datos,agregar}){
+  const [form,setForm]=useState({tipo:"evento",texto:"",fecha:inputFechaHoy(),nota:""});
+  const [openForm,setOpenForm]=useState(false);
+  const s=t=>setForm(f=>({...f,...t}));
+  const guardarItem=()=>{
     if(!form.texto) return;
-    const key = form.tipo === "evento" ? "eventos" : form.tipo === "tarea" ? "tareas" : "pagos";
-    const nuevo = {...datos, [key]: [{id:Date.now(), texto:form.texto, fecha:form.fecha, nota:form.nota, hecho:false}, ...(datos[key]||[])]};
+    const key=form.tipo==="evento"?"eventos":form.tipo==="tarea"?"tareas":"pagos";
+    const nuevo={...datos,[key]:[{id:Date.now(),texto:form.texto,fecha:form.fecha,nota:form.nota,hecho:false},...(datos[key]||[])]};
     agregar(nuevo);
-    setForm({tipo:"evento", texto:"", fecha:inputFechaHoy(), nota:""});
+    setForm({tipo:"evento",texto:"",fecha:inputFechaHoy(),nota:""});
     setOpenForm(false);
   };
-
-  const toggleHecho = (key, id) => {
-    const nuevo = {...datos, [key]: datos[key].map(x => x.id===id ? {...x, hecho:!x.hecho} : x)};
+  const toggleHecho=(key,id)=>{
+    const nuevo={...datos,[key]:datos[key].map(x=>x.id===id?{...x,hecho:!x.hecho}:x)};
     agregar(nuevo);
   };
-
-  const borrarItem = (key, id) => {
-    const nuevo = {...datos, [key]: datos[key].filter(x => x.id!==id)};
+  const borrarItem=(key,id)=>{
+    const nuevo={...datos,[key]:datos[key].filter(x=>x.id!==id)};
     agregar(nuevo);
   };
-
-  return (
+  return(
     <div style={{padding:16}}>
-      <Card style={{background:`${hijo.colorLight}`,border:`1.5px solid ${hijo.color}30`,marginBottom:14}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-          <div>
-            <div style={{fontWeight:800,fontSize:17,color:hijo.color}}>{datos.nombre||"Jardín"}</div>
-            <div style={{fontSize:13,color:"#666",marginTop:2}}>{datos.sala}</div>
-            <div style={{fontSize:13,color:"#666"}}>⏰ {datos.horario}</div>
-            {datos.maestras?.map((m,i)=><div key={i} style={{fontSize:13,color:"#666"}}>👩‍🏫 {m.nombre} ({m.turno})</div>)}
-            {datos.comidas?.length>0&&<div style={{fontSize:13,color:"#666"}}>🍽️ {datos.comidas.join(", ")}</div>}
-            {datos.nota&&<div style={{fontSize:12,color:"#888",fontStyle:"italic",marginTop:4}}>{datos.nota}</div>}
-          </div>
-        </div>
+      <Card style={{background:hijo.colorLight,border:`1.5px solid ${hijo.color}30`,marginBottom:14}}>
+        <div style={{fontWeight:800,fontSize:17,color:hijo.color}}>{datos.nombre||"Jardín"}</div>
+        <div style={{fontSize:13,color:"#666",marginTop:2}}>{datos.sala}</div>
+        <div style={{fontSize:13,color:"#666"}}>⏰ {datos.horario}</div>
+        {datos.maestras?.map((m,i)=><div key={i} style={{fontSize:13,color:"#666"}}>👩‍🏫 {m.nombre} ({m.turno})</div>)}
+        {datos.comidas?.length>0&&<div style={{fontSize:13,color:"#666"}}>🍽️ {datos.comidas.join(", ")}</div>}
+        {datos.nota&&<div style={{fontSize:12,color:"#888",fontStyle:"italic",marginTop:4}}>{datos.nota}</div>}
       </Card>
-
       <Btn full color={hijo.color} onClick={()=>setOpenForm(!openForm)}>+ Agregar evento / tarea / pago</Btn>
       {openForm&&(
         <Card style={{marginTop:10}}>
@@ -815,21 +767,20 @@ function ModJardin({hijo, datos, agregar}) {
               {["evento","tarea","pago"].map(t=><Chip key={t} active={form.tipo===t} onClick={()=>s({tipo:t})} color={hijo.color}>{t.charAt(0).toUpperCase()+t.slice(1)}</Chip>)}
             </div>
           </div>
-          <Inp label="Descripción" placeholder={form.tipo==="evento"?"Ej: Acto del Día de la Madre":form.tipo==="tarea"?"Ej: Llevar delantal":""} value={form.texto} onChange={e=>s({texto:e.target.value})}/>
+          <Inp label="Descripción" placeholder={form.tipo==="evento"?"Ej: Acto del Día de la Madre":form.tipo==="tarea"?"Ej: Llevar delantal":"Ej: Cuota Mayo"} value={form.texto} onChange={e=>s({texto:e.target.value})}/>
           <Inp label="Fecha" type="date" value={form.fecha} onChange={e=>s({fecha:e.target.value})}/>
           <Inp label="Nota" placeholder="Detalles adicionales..." value={form.nota} onChange={e=>s({nota:e.target.value})}/>
           <div style={{display:"flex",gap:8}}><Btn onClick={guardarItem} color={hijo.color} full>Guardar</Btn><Btn onClick={()=>setOpenForm(false)} secondary>Cancelar</Btn></div>
         </Card>
       )}
-
       {["eventos","tareas","pagos"].map(key=>{
-        const items = (datos[key]||[]);
-        const pendientes = items.filter(x=>!x.hecho);
-        const hechos = items.filter(x=>x.hecho);
-        const icons = {eventos:"📅",tareas:"✅",pagos:"💰"};
-        const labels = {eventos:"Eventos",tareas:"Tareas",pagos:"Pagos"};
+        const items=(datos[key]||[]);
         if(!items.length) return null;
-        return (
+        const icons={eventos:"📅",tareas:"✅",pagos:"💰"};
+        const labels={eventos:"Eventos",tareas:"Tareas",pagos:"Pagos"};
+        const pendientes=items.filter(x=>!x.hecho);
+        const hechos=items.filter(x=>x.hecho);
+        return(
           <div key={key} style={{marginTop:16}}>
             <SectionLabel color={hijo.color}>{icons[key]} {labels[key]}</SectionLabel>
             {pendientes.map(r=>(
@@ -865,20 +816,20 @@ function ModJardin({hijo, datos, agregar}) {
   );
 }
 
-function ModAgenda({hijo, datos, agregar, borrar}) {
-  const [form, setForm] = useState({titulo:"", fecha:inputFechaHoy(), hora:"", tipo:"turno", nota:""});
-  const [open, setOpen] = useState(false);
-  const s = t => setForm(f=>({...f,...t}));
-  const guardar = () => {
+function ModAgenda({hijo,datos,agregar,borrar}){
+  const [form,setForm]=useState({titulo:"",fecha:inputFechaHoy(),hora:"",tipo:"turno",nota:""});
+  const [open,setOpen]=useState(false);
+  const s=t=>setForm(f=>({...f,...t}));
+  const guardar=()=>{
     if(!form.titulo) return;
-    agregar({...form, ts:hoyISO()});
-    setForm({titulo:"", fecha:inputFechaHoy(), hora:"", tipo:"turno", nota:""});
+    agregar({...form,ts:hoyISO()});
+    setForm({titulo:"",fecha:inputFechaHoy(),hora:"",tipo:"turno",nota:""});
     setOpen(false);
   };
-  const proximos = datos.filter(d=>d.fecha>=inputFechaHoy()).sort((a,b)=>a.fecha>b.fecha?1:-1);
-  const pasados = datos.filter(d=>d.fecha<inputFechaHoy()).sort((a,b)=>a.fecha<b.fecha?1:-1);
-  const iconTipo = {turno:"👨‍⚕️", evento:"📅", recordatorio:"🔔", otro:"📌"};
-  return (
+  const proximos=datos.filter(d=>d.fecha>=inputFechaHoy()).sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const pasados=datos.filter(d=>d.fecha<inputFechaHoy()).sort((a,b)=>a.fecha<b.fecha?1:-1);
+  const iconTipo={turno:"👨‍⚕️",evento:"📅",recordatorio:"🔔",otro:"📌"};
+  return(
     <div style={{padding:16}}>
       <Btn full color={hijo.color} onClick={()=>setOpen(!open)}>+ Agregar a la agenda</Btn>
       {open&&(
@@ -898,107 +849,114 @@ function ModAgenda({hijo, datos, agregar, borrar}) {
           <div style={{display:"flex",gap:8}}><Btn onClick={guardar} color={hijo.color} full>Guardar</Btn><Btn onClick={()=>setOpen(false)} secondary>Cancelar</Btn></div>
         </Card>
       )}
-      {proximos.length>0&&<div style={{marginTop:16}}><SectionLabel color={hijo.color}>Próximos</SectionLabel>
-        {proximos.map(r=>(
-          <Card key={r.id} style={{borderLeft:`3px solid ${hijo.color}`}}>
-            <div style={{display:"flex",justifyContent:"space-between"}}>
-              <div>
-                <div style={{fontWeight:700,fontSize:15}}>{iconTipo[r.tipo]} {r.titulo}</div>
-                <div style={{fontSize:12,color:"#aaa"}}>{formatFecha(r.fecha+"T12:00:00")} {r.hora&&`• ${r.hora}hs`}</div>
-                {r.nota&&<div style={{fontSize:12,color:"#888",fontStyle:"italic"}}>{r.nota}</div>}
-              </div>
-              <button onClick={()=>borrar(r.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18}}>×</button>
-            </div>
-          </Card>
-        ))}
-      </div>}
-      {pasados.length>0&&<div style={{marginTop:16}}><SectionLabel color="#aaa">Pasados</SectionLabel>
-        {pasados.map(r=>(
-          <Card key={r.id} style={{opacity:0.6}}>
-            <div style={{display:"flex",justifyContent:"space-between"}}>
-              <div>
-                <div style={{fontWeight:600,fontSize:14}}>{iconTipo[r.tipo]} {r.titulo}</div>
-                <div style={{fontSize:12,color:"#aaa"}}>{formatFecha(r.fecha+"T12:00:00")} {r.hora&&`• ${r.hora}hs`}</div>
-              </div>
-              <button onClick={()=>borrar(r.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18}}>×</button>
-            </div>
-          </Card>
-        ))}
-      </div>}
-      {datos.length===0&&<Empty>Sin eventos en la agenda</Empty>}
-    </div>
-  );
-}
-
-function EventosFamilia({datos, agregar, borrar}) {
-  const [form, setForm] = useState({nombre:"", fecha:inputFechaHoy(), tipo:"evento", nota:""});
-  const [open, setOpen] = useState(false);
-  const s = t => setForm(f=>({...f,...t}));
-  const guardar = () => {
-    if(!form.nombre) return;
-    agregar({...form});
-    setForm({nombre:"", fecha:inputFechaHoy(), tipo:"evento", nota:""});
-    setOpen(false);
-  };
-  const sorted = [...datos].sort((a,b)=>a.fecha>b.fecha?1:-1);
-  const iconTipo = {cumple:"🎂", evento:"🎉", vacaciones:"✈️", otro:"📌"};
-
-  const diasHasta = (fecha) => {
-    const hoy = new Date();
-    const f = new Date(fecha);
-    const diff = Math.ceil((f-hoy)/(864e5));
-    if(diff<0) return null;
-    if(diff===0) return "¡Hoy!";
-    if(diff===1) return "¡Mañana!";
-    return `en ${diff} días`;
-  };
-
-  return (
-    <div style={{fontFamily:"system-ui,sans-serif",maxWidth:420,margin:"0 auto",padding:16,background:"#f8f9fb",minHeight:"100vh"}}>
-      <div style={{background:"linear-gradient(135deg,#a78bfa,#ec4899)",padding:"20px",borderRadius:16,marginBottom:16}}>
-        <div style={{color:"#fff",fontWeight:800,fontSize:22}}>🎉 Eventos Familiares</div>
-        <div style={{color:"rgba(255,255,255,0.8)",fontSize:13,marginTop:4}}>Cumpleaños, vacaciones y fechas especiales</div>
-      </div>
-      <Btn full color="#a78bfa" onClick={()=>setOpen(!open)}>+ Agregar evento</Btn>
-      {open&&(
-        <Card style={{marginTop:10}}>
-          <Inp label="Nombre" placeholder="Ej: Cumple abuela Rosa, Vacaciones en Mar del Plata..." value={form.nombre} onChange={e=>s({nombre:e.target.value})}/>
-          <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,color:"#888",display:"block",marginBottom:6}}>Tipo</label>
-            <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-              {["cumple","evento","vacaciones","otro"].map(t=><Chip key={t} active={form.tipo===t} onClick={()=>s({tipo:t})} color="#a78bfa">{iconTipo[t]} {t.charAt(0).toUpperCase()+t.slice(1)}</Chip>)}
-            </div>
-          </div>
-          <Inp label="Fecha" type="date" value={form.fecha} onChange={e=>s({fecha:e.target.value})}/>
-          <Inp label="Nota" placeholder="Detalles..." value={form.nota} onChange={e=>s({nota:e.target.value})}/>
-          <div style={{display:"flex",gap:8}}><Btn onClick={guardar} color="#a78bfa" full>Guardar</Btn><Btn onClick={()=>setOpen(false)} secondary>Cancelar</Btn></div>
-        </Card>
-      )}
-      <div style={{marginTop:16}}>
-        {sorted.map(r=>{
-          const dias = diasHasta(r.fecha);
-          return (
-            <Card key={r.id} style={{borderLeft:`3px solid #a78bfa`}}>
+      {proximos.length>0&&(
+        <div style={{marginTop:16}}>
+          <SectionLabel color={hijo.color}>Próximos</SectionLabel>
+          {proximos.map(r=>(
+            <Card key={r.id} style={{borderLeft:`3px solid ${hijo.color}`}}>
               <div style={{display:"flex",justifyContent:"space-between"}}>
                 <div>
-                  <div style={{fontWeight:700,fontSize:15}}>{iconTipo[r.tipo]||"📌"} {r.nombre}</div>
-                  <div style={{fontSize:12,color:"#aaa"}}>{formatFecha(r.fecha+"T12:00:00")}</div>
-                  {dias&&<div style={{fontSize:12,color:"#a78bfa",fontWeight:600}}>{dias}</div>}
+                  <div style={{fontWeight:700,fontSize:15}}>{iconTipo[r.tipo]} {r.titulo}</div>
+                  <div style={{fontSize:12,color:"#aaa"}}>{formatFecha(r.fecha+"T12:00:00")} {r.hora&&`• ${r.hora}hs`}</div>
                   {r.nota&&<div style={{fontSize:12,color:"#888",fontStyle:"italic"}}>{r.nota}</div>}
                 </div>
                 <button onClick={()=>borrar(r.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18}}>×</button>
               </div>
             </Card>
-          );
-        })}
-        {datos.length===0&&<Empty>Sin eventos familiares</Empty>}
+          ))}
+        </div>
+      )}
+      {pasados.length>0&&(
+        <div style={{marginTop:16}}>
+          <SectionLabel color="#aaa">Pasados</SectionLabel>
+          {pasados.map(r=>(
+            <Card key={r.id} style={{opacity:0.6}}>
+              <div style={{display:"flex",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:14}}>{iconTipo[r.tipo]} {r.titulo}</div>
+                  <div style={{fontSize:12,color:"#aaa"}}>{formatFecha(r.fecha+"T12:00:00")} {r.hora&&`• ${r.hora}hs`}</div>
+                </div>
+                <button onClick={()=>borrar(r.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18}}>×</button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+      {datos.length===0&&<Empty>Sin eventos en la agenda</Empty>}
+    </div>
+  );
+}
+
+function EventosFamilia({datos,agregar,borrar,onBack}){
+  const [form,setForm]=useState({nombre:"",fecha:inputFechaHoy(),tipo:"evento",nota:""});
+  const [open,setOpen]=useState(false);
+  const s=t=>setForm(f=>({...f,...t}));
+  const guardar=()=>{
+    if(!form.nombre) return;
+    agregar({...form});
+    setForm({nombre:"",fecha:inputFechaHoy(),tipo:"evento",nota:""});
+    setOpen(false);
+  };
+  const sorted=[...datos].sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const iconTipo={cumple:"🎂",evento:"🎉",vacaciones:"✈️",otro:"📌"};
+  const diasHasta=(fecha)=>{
+    const hoy=new Date();
+    const f=new Date(fecha+"T12:00:00");
+    const diff=Math.ceil((f-hoy)/(864e5));
+    if(diff<0) return null;
+    if(diff===0) return "¡Hoy!";
+    if(diff===1) return "¡Mañana!";
+    return `en ${diff} días`;
+  };
+  return(
+    <div style={{fontFamily:"system-ui,sans-serif",maxWidth:420,margin:"0 auto",background:"#f8f9fb",minHeight:"100vh"}}>
+      <div style={{background:"linear-gradient(135deg,#a78bfa,#ec4899)",padding:"20px 20px 24px"}}>
+        <button onClick={onBack} style={{background:"rgba(255,255,255,0.2)",border:"none",borderRadius:10,padding:"6px 14px",color:"#fff",cursor:"pointer",fontSize:13,marginBottom:14}}>← Inicio</button>
+        <div style={{color:"#fff",fontWeight:800,fontSize:22}}>🎉 Eventos Familiares</div>
+        <div style={{color:"rgba(255,255,255,0.8)",fontSize:13,marginTop:4}}>Cumpleaños, vacaciones y fechas especiales</div>
+      </div>
+      <div style={{padding:16}}>
+        <Btn full color="#a78bfa" onClick={()=>setOpen(!open)}>+ Agregar evento</Btn>
+        {open&&(
+          <Card style={{marginTop:10}}>
+            <Inp label="Nombre" placeholder="Ej: Cumple abuela Rosa..." value={form.nombre} onChange={e=>s({nombre:e.target.value})}/>
+            <div style={{marginBottom:12}}>
+              <label style={{fontSize:12,color:"#888",display:"block",marginBottom:6}}>Tipo</label>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {["cumple","evento","vacaciones","otro"].map(t=><Chip key={t} active={form.tipo===t} onClick={()=>s({tipo:t})} color="#a78bfa">{iconTipo[t]} {t.charAt(0).toUpperCase()+t.slice(1)}</Chip>)}
+              </div>
+            </div>
+            <Inp label="Fecha" type="date" value={form.fecha} onChange={e=>s({fecha:e.target.value})}/>
+            <Inp label="Nota" placeholder="Detalles..." value={form.nota} onChange={e=>s({nota:e.target.value})}/>
+            <div style={{display:"flex",gap:8}}><Btn onClick={guardar} color="#a78bfa" full>Guardar</Btn><Btn onClick={()=>setOpen(false)} secondary>Cancelar</Btn></div>
+          </Card>
+        )}
+        <div style={{marginTop:16}}>
+          {sorted.map(r=>{
+            const dias=diasHasta(r.fecha);
+            return(
+              <Card key={r.id} style={{borderLeft:"3px solid #a78bfa"}}>
+                <div style={{display:"flex",justifyContent:"space-between"}}>
+                  <div>
+                    <div style={{fontWeight:700,fontSize:15}}>{iconTipo[r.tipo]||"📌"} {r.nombre}</div>
+                    <div style={{fontSize:12,color:"#aaa"}}>{formatFecha(r.fecha+"T12:00:00")}</div>
+                    {dias&&<div style={{fontSize:12,color:"#a78bfa",fontWeight:600}}>{dias}</div>}
+                    {r.nota&&<div style={{fontSize:12,color:"#888",fontStyle:"italic"}}>{r.nota}</div>}
+                  </div>
+                  <button onClick={()=>borrar(r.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18}}>×</button>
+                </div>
+              </Card>
+            );
+          })}
+          {datos.length===0&&<Empty>Sin eventos familiares</Empty>}
+        </div>
       </div>
     </div>
   );
 }
 
-
-  if(!datos.length)return null;
+function MiniChart({datos,color}){
+  if(!datos.length) return null;
   const vals=datos.map(d=>d.val);
   const min=Math.min(...vals),max=Math.max(...vals);
   const range=max-min||1;
@@ -1006,7 +964,7 @@ function EventosFamilia({datos, agregar, borrar}) {
   const x=(i)=>pad+(i/(datos.length-1||1))*(W-pad*2);
   const y=(v)=>H-8-((v-min)/range)*(H-16);
   const pts=datos.map((d,i)=>`${x(i)},${y(d.val)}`).join(" ");
-  return (
+  return(
     <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:H}}>
       <polyline points={pts} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
       {datos.map((d,i)=>(
