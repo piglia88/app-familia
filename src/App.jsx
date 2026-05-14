@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCSK0q0NE4SCJop_-e9RJ9YvOFxGfQOxAk",
@@ -13,6 +14,33 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
+
+const VAPID_KEY = "BGVl82Wo5C6bdx45M-YjWn7kl6t1K72q4TptRBHMmDGNDtFJ671C1AulleOm7KoRM2NSQeKkeqUexMYAJIxXHnU";
+
+async function pedirPermisoNotificaciones() {
+  try {
+    const permission = await Notification.requestPermission();
+    if(permission !== 'granted') return null;
+    const messaging = getMessaging(firebaseApp);
+    const token = await getToken(messaging, {vapidKey: VAPID_KEY});
+    return token;
+  } catch(e) { return null; }
+}
+
+async function enviarNotificacion(title, body) {
+  try {
+    const snap = await new Promise(res => {
+      const unsub = onSnapshot(doc(db,"app","tokens"), d => { unsub(); res(d); });
+    });
+    const tokens = Object.keys(snap.data()||{});
+    if(!tokens.length) return;
+    await fetch('/api/send-notification', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({tokens, title, body})
+    });
+  } catch(e) {}
+}
 
 const DATOS_INICIALES = {
   gennaro: {
@@ -179,6 +207,12 @@ export default function App() {
         setFamiliaFoto(snap.data().familiaFoto||null);
       }
     });
+
+    // Pedir permiso notificaciones y guardar token
+    pedirPermisoNotificaciones().then(token=>{
+      if(token) setDoc(doc(db,"app","tokens"),{[token]:{activo:true,ts:new Date().toISOString()}},{merge:true});
+    });
+
     return ()=>{unsubDatos();unsubPerfiles();};
   },[]);
 
@@ -210,6 +244,9 @@ export default function App() {
     const n={...datos};
     n[hijo][mod]=[{id:Date.now(),...item},...n[hijo][mod]];
     guardarDatos(n);
+    // Notificar
+    const nombres = {fiebre:"🌡️ Fiebre",comidas:"🍽️ Comida",vacunas:"💉 Vacuna",medico:"👨‍⚕️ Médico",sueño:"😴 Sueño",crecimiento:"📈 Medición",agenda:"📅 Agenda"};
+    enviarNotificacion(`${hijoObj?.nombre} — ${nombres[mod]||mod}`, item.temp?`${item.temp}°C`:item.titulo||item.tipo||item.nombre||"Nuevo registro");
   };
 
   const borrarDato=(mod,id)=>{
