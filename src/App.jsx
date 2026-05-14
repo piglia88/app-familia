@@ -6,7 +6,7 @@
 import { useState, useEffect, useRef } from "react";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
-import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
+
 
 // 🔥 TUS CREDENCIALES DE FIREBASE
 const firebaseConfig = {
@@ -20,7 +20,6 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
-const storage = getStorage(firebaseApp);
 
 // ============================================================
 // DATOS INICIALES - Historial completo del pediatra
@@ -179,28 +178,12 @@ export default function App() {
   };
 
   const subirFoto = async (id, base64) => {
-    try {
-      const storageRef = ref(storage, `fotos/${id}`);
-      await uploadString(storageRef, base64, 'data_url');
-      const url = await getDownloadURL(storageRef);
-      const nuevosHijos = hijos.map(h => h.id === id ? {...h, foto: url} : h);
-      guardarPerfiles(nuevosHijos, undefined);
-    } catch(e) {
-      // Si Storage no está habilitado, guardar en base64 localmente
-      const nuevosHijos = hijos.map(h => h.id === id ? {...h, foto: base64} : h);
-      guardarPerfiles(nuevosHijos, undefined);
-    }
+    const nuevosHijos = hijos.map(h => h.id === id ? {...h, foto: base64} : h);
+    guardarPerfiles(nuevosHijos, undefined);
   };
 
   const subirFotoFamilia = async (base64) => {
-    try {
-      const storageRef = ref(storage, 'fotos/familia');
-      await uploadString(storageRef, base64, 'data_url');
-      const url = await getDownloadURL(storageRef);
-      guardarPerfiles(undefined, url);
-    } catch(e) {
-      guardarPerfiles(undefined, base64);
-    }
+    guardarPerfiles(undefined, base64);
   };
 
   const agregarDato = (mod, item) => {
