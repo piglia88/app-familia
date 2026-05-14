@@ -357,7 +357,18 @@ function Header({hijo,titulo,onBack}){
 }
 
 function Inicio({hijos,setHijo,datos,familiaFoto,subirFotoFamilia,subirFoto,guardando,setVerEventos,eventosFamilia}){
+  const [notifState,setNotifState]=useState("idle");
   const proxEvento=(eventosFamilia||[]).filter(e=>e.fecha>=inputFechaHoy()).sort((a,b)=>a.fecha>b.fecha?1:-1)[0];
+
+  const activarNotificaciones=async()=>{
+    setNotifState("loading");
+    const token=await pedirPermisoNotificaciones();
+    if(token){
+      setNotifState("ok");
+    } else {
+      setNotifState("error");
+    }
+  };
   return(
     <div style={{fontFamily:"system-ui,sans-serif",maxWidth:420,margin:"0 auto",background:"#f8f9fb",minHeight:"100vh"}}>
       <div style={{background:"linear-gradient(135deg,#4F8EF7,#a78bfa)",padding:"28px 20px 24px"}}>
@@ -372,6 +383,23 @@ function Inicio({hijos,setHijo,datos,familiaFoto,subirFotoFamilia,subirFoto,guar
         </div>
       </div>
       <div style={{padding:"20px 16px"}}>
+        {notifState!=="ok"&&(
+          <div onClick={activarNotificaciones} style={{background:notifState==="error"?"#fff2f2":"#f0f9ff",borderRadius:14,padding:"12px 16px",marginBottom:14,cursor:"pointer",border:`1px solid ${notifState==="error"?"#fca5a5":"#bae6fd"}`,display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:22}}>{notifState==="loading"?"⏳":notifState==="error"?"❌":"🔔"}</span>
+            <div>
+              <div style={{fontWeight:700,fontSize:14,color:notifState==="error"?"#ef4444":"#0284c7"}}>
+                {notifState==="loading"?"Activando...":notifState==="error"?"No se pudo activar — tocá para reintentar":"Activar notificaciones"}
+              </div>
+              {notifState==="idle"&&<div style={{fontSize:12,color:"#888"}}>Recibí avisos cuando Marina cargue algo</div>}
+            </div>
+          </div>
+        )}
+        {notifState==="ok"&&(
+          <div style={{background:"#f0fdf4",borderRadius:14,padding:"12px 16px",marginBottom:14,border:"1px solid #86efac",display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:22}}>🔔</span>
+            <div style={{fontWeight:700,fontSize:14,color:"#16a34a"}}>Notificaciones activadas ✓</div>
+          </div>
+        )}
         <div onClick={()=>setVerEventos(true)} style={{background:proxEvento?"linear-gradient(135deg,#a78bfa20,#ec489920)":"#f0f0f0",borderRadius:14,padding:"12px 16px",marginBottom:14,cursor:"pointer",border:"1px solid #a78bfa30",textAlign:proxEvento?"left":"center"}}>
           {proxEvento?(
             <>
