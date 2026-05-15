@@ -733,54 +733,147 @@ function SuperMercado({items,guardar,onBack}){
 // ============================================================
 // RECETARIO
 // ============================================================
+const SISTEMA_CHEF = `Sos el chef personal de la familia Pigliapoco. Conocés perfectamente 3 libros de recetas:
+
+1. "Primeras Comidas" (Dra. Jurozdicki) - Para bebés desde 6 meses. Incluye: panqueques de banana, purés de zanahoria/berenjena/papa, untable de garbanzos, pizzitas de zanahoria, rectángulos de batata y avena, fainá, pastel de papa, bolitas de pescado y arroz, milanesitas de arvejas/zucchini, ñoquis de remolacha, bocaditos de lentejas, bolitas de calabaza y polenta, empanadas de pollo, muffins de manzana, galletitas de banana y coco, heladito de arándanos y maní, torta cumple sin azúcar, buñuelos de acelga, ñoquis de queso, postre de chocolate y banana.
+
+2. "Ñam Ñam" (Narda Lepes) - Bebés y niños. Incluye: purés de manzana y zapallo, batata y choclo, batata y ananá, lentejas y batata, papa y remolacha, palta y banana, sopa crema de coliflor, okayu (arroz japonés), galletitas de patitas de queso, vegetales asados, torta de frutas, hummus, sopa de garbanzos, risotto blanco, ñoquis de calabaza y ricota, malfatti, pancitos de leche, misoshiru, yakitori, quesadillas, arepas, fish pie, muffins salados, lasaña, carrot cake, arroz con leche, galletas, chicken pie, albondiguitas de pollo y manzana, milanesas, croquetas de pescado, estofado de carne, cordero braseado, pollo a la plancha, hamburguesas.
+
+3. "Paulina Cocina en 30 minutos" (Paulina Cocina) - Para toda la familia. Incluye: masa para tarta 9-9-9, tarta de peras y provolone, tarta de ricota y tomate, strata de brócoli, crumble de verduras, torta de papas, pasta alfredo con pollo, pasta mediterránea, pasta con espinaca, pasta al vino tinto, tabulé, ensalada de palta y mango, brócoli gratinado, papas en paquetito, ensalada de remolacha, puré de papas y manzanas, berenjena 4 minutos, tortitas de choclo, coliflor grillada, provoleta con rúcula, cruet de merluza, pescado a la sal, ceviche, pescado provenzal, pescado en paquetito, pollo a la cacerola marroquí, bolsitas de pollo marinado, alitas adobadas, pollo al ajillo, bastones de pollo y parmesano, pollo al curry, cerdo al aceto, bondiola a la naranja, milanesitas de cerdo, solomillo al whisky, cerdo agridulce, churrasco con café, carne al vino tinto, guisito de lentejas, falafel, guiso blanco y rojo, medallones de garbanzo, palmeritas saladas, nuggets de pollo, pizza sin horno, hamburguesas rellenas, fajitas mentirosas, mousse de chocolate, flan, torta banoffee, mug cake, trufas, muffins salados.
+
+La familia tiene dos hijos:
+- GENNARO (2 años): puede comer de todo, le gustan los sabores variados
+- FRANCESCO (6 meses): recién empieza con sólidos, solo puede comer recetas de bebé sin sal ni azúcar
+
+Cuando te pregunten sobre recetas:
+- Respondé en español
+- Sé amigable y conciso
+- Si preguntan por un hijo específico, adaptá las sugerencias a su edad
+- Dá 3-4 opciones con nombre, tiempo y una línea de descripción
+- Si piden una receta específica, dá los ingredientes y pasos completos
+- Podés sugerir adaptaciones para hacerla apta para bebés cuando sea posible`;
+
 function Recetario({onBack}){
-  const [seccion,setSeccion]=useState("familia"); // familia | francesco
+  const [vista,setVista]=useState("inicio"); // inicio | lista | chat
+  const [seccion,setSeccion]=useState("familia");
   const [recetaSeleccionada,setRecetaSeleccionada]=useState(null);
   const [filtroCategoria,setFiltroCategoria]=useState("Todas");
+  const [mensajes,setMensajes]=useState([
+    {rol:"assistant",texto:"¡Hola! Soy tu chef personal 👨‍🍳 Puedo ayudarte a encontrar recetas de los 3 libros de la familia.\n\nProbá preguntarme:\n• \"Qué le puedo dar hoy a Francesco\"\n• \"Recetas rápidas para Gennaro\"\n• \"Cómo hago los ñoquis de remolacha\"\n• \"Algo con pollo para esta noche\""}
+  ]);
+  const [input,setInput]=useState("");
+  const [cargando,setCargando]=useState(false);
+  const chatRef=useRef(null);
+
+  const enviarMensaje=async()=>{
+    if(!input.trim()||cargando) return;
+    const userMsg={rol:"user",texto:input.trim()};
+    setMensajes(m=>[...m,userMsg]);
+    setInput("");
+    setCargando(true);
+    try{
+      const historial=mensajes.map(m=>({role:m.rol==="user"?"user":"assistant",content:m.texto}));
+      const res=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          model:"claude-sonnet-4-20250514",
+          max_tokens:1000,
+          system:SISTEMA_CHEF,
+          messages:[...historial,{role:"user",content:userMsg.texto}]
+        })
+      });
+      const data=await res.json();
+      const respuesta=data.content?.[0]?.text||"No pude encontrar esa receta, probá con otra pregunta.";
+      setMensajes(m=>[...m,{rol:"assistant",texto:respuesta}]);
+    }catch(e){
+      setMensajes(m=>[...m,{rol:"assistant",texto:"Ups, hubo un error. Intentá de nuevo 🙏"}]);
+    }
+    setCargando(false);
+    setTimeout(()=>chatRef.current?.scrollTo(0,chatRef.current.scrollHeight),100);
+  };
+
+  if(recetaSeleccionada) return <DetalleReceta receta={recetaSeleccionada} onBack={()=>setRecetaSeleccionada(null)}/>;
 
   const recetas=seccion==="familia"?RECETAS_FAMILIA:RECETAS_FRANCESCO;
   const categorias=["Todas",...[...new Set(recetas.map(r=>r.categoria))]];
   const filtradas=filtroCategoria==="Todas"?recetas:recetas.filter(r=>r.categoria===filtroCategoria);
 
-  if(recetaSeleccionada) return <DetalleReceta receta={recetaSeleccionada} onBack={()=>setRecetaSeleccionada(null)}/>;
-
   return(
-    <div style={{fontFamily:"system-ui,sans-serif",maxWidth:420,margin:"0 auto",background:"#f8f9fb",minHeight:"100vh"}}>
+    <div style={{fontFamily:"system-ui,sans-serif",maxWidth:420,margin:"0 auto",background:"#f8f9fb",minHeight:"100vh",display:"flex",flexDirection:"column"}}>
       <div style={{background:"linear-gradient(135deg,#f59e0b,#ef4444)",padding:"20px 20px 24px"}}>
         <button onClick={onBack} style={{background:"rgba(255,255,255,0.2)",border:"none",borderRadius:10,padding:"6px 14px",color:"#fff",cursor:"pointer",fontSize:13,marginBottom:14}}>← Inicio</button>
         <div style={{color:"#fff",fontWeight:800,fontSize:22}}>🍳 Recetario</div>
         <div style={{color:"rgba(255,255,255,0.85)",fontSize:13,marginTop:4}}>Recetas para toda la familia</div>
+        {/* Tabs */}
+        <div style={{display:"flex",gap:8,marginTop:16}}>
+          <button onClick={()=>setVista("chat")} style={{flex:1,padding:"10px",borderRadius:12,border:"none",background:vista==="chat"?"rgba(255,255,255,0.95)":"rgba(255,255,255,0.2)",color:vista==="chat"?"#f59e0b":"#fff",fontWeight:700,cursor:"pointer",fontSize:13}}>🤖 Chef IA</button>
+          <button onClick={()=>setVista("lista")} style={{flex:1,padding:"10px",borderRadius:12,border:"none",background:vista==="lista"?"rgba(255,255,255,0.95)":"rgba(255,255,255,0.2)",color:vista==="lista"?"#f59e0b":"#fff",fontWeight:700,cursor:"pointer",fontSize:13}}>📋 Lista</button>
+        </div>
       </div>
-      <div style={{padding:16}}>
-        {/* Selector sección */}
-        <div style={{display:"flex",gap:8,marginBottom:16}}>
-          <button onClick={()=>{setSeccion("familia");setFiltroCategoria("Todas");}} style={{flex:1,padding:"10px",borderRadius:12,border:"none",background:seccion==="familia"?"#f59e0b":"#f0f0f0",color:seccion==="familia"?"#fff":"#555",fontWeight:700,cursor:"pointer"}}>👨‍👩‍👦 Familia</button>
-          <button onClick={()=>{setSeccion("francesco");setFiltroCategoria("Todas");}} style={{flex:1,padding:"10px",borderRadius:12,border:"none",background:seccion==="francesco"?"#F7824F":"#f0f0f0",color:seccion==="francesco"?"#fff":"#555",fontWeight:700,cursor:"pointer"}}>👶 Francesco</button>
-        </div>
 
-        {/* Filtro categorías */}
-        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>
-          {categorias.map(c=>(
-            <button key={c} onClick={()=>setFiltroCategoria(c)} style={{padding:"5px 12px",borderRadius:20,border:`1.5px solid ${filtroCategoria===c?(seccion==="familia"?"#f59e0b":"#F7824F"):"#e5e5e5"}`,background:filtroCategoria===c?(seccion==="familia"?"#f59e0b":"#F7824F"):"#fff",color:filtroCategoria===c?"#fff":"#555",fontSize:13,cursor:"pointer",fontWeight:filtroCategoria===c?600:400}}>{c}</button>
-          ))}
-        </div>
-
-        {/* Lista de recetas */}
-        {filtradas.map(r=>(
-          <div key={r.id} onClick={()=>setRecetaSeleccionada(r)} style={{background:"#fff",borderRadius:14,padding:"16px",marginBottom:10,cursor:"pointer",border:"1px solid #f0f0f0",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:700,fontSize:16,color:"#1a1a2e"}}>{r.nombre}</div>
-                <div style={{display:"flex",gap:8,marginTop:4}}>
-                  <span style={{fontSize:12,color:"#888"}}>⏱️ {r.tiempo}</span>
-                  <span style={{fontSize:12,background:"#f0f0f0",padding:"2px 8px",borderRadius:10,color:"#666"}}>{r.categoria}</span>
+      {/* VISTA CHAT */}
+      {vista==="chat"&&(
+        <div style={{flex:1,display:"flex",flexDirection:"column",height:"calc(100vh - 180px)"}}>
+          <div ref={chatRef} style={{flex:1,overflowY:"auto",padding:16,display:"flex",flexDirection:"column",gap:12}}>
+            {mensajes.map((m,i)=>(
+              <div key={i} style={{display:"flex",justifyContent:m.rol==="user"?"flex-end":"flex-start"}}>
+                <div style={{maxWidth:"85%",background:m.rol==="user"?"#f59e0b":"#fff",color:m.rol==="user"?"#fff":"#1a1a2e",borderRadius:m.rol==="user"?"18px 18px 4px 18px":"18px 18px 18px 4px",padding:"12px 16px",fontSize:14,lineHeight:1.5,boxShadow:"0 2px 8px rgba(0,0,0,0.08)",whiteSpace:"pre-wrap"}}>
+                  {m.texto}
                 </div>
               </div>
-              <span style={{color:"#ddd",fontSize:20,marginLeft:8}}>›</span>
-            </div>
+            ))}
+            {cargando&&(
+              <div style={{display:"flex",justifyContent:"flex-start"}}>
+                <div style={{background:"#fff",borderRadius:"18px 18px 18px 4px",padding:"12px 16px",boxShadow:"0 2px 8px rgba(0,0,0,0.08)"}}>
+                  <div style={{display:"flex",gap:4}}>
+                    {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#f59e0b",animation:`bounce 1s ${i*0.2}s infinite`}}/>)}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        ))}
-      </div>
+          {/* Sugerencias rápidas */}
+          <div style={{padding:"8px 16px",display:"flex",gap:6,flexWrap:"wrap"}}>
+            {["Para Francesco hoy","Algo rápido para Gennaro","Receta con pollo","Postre fácil"].map(s=>(
+              <button key={s} onClick={()=>{setInput(s);}} style={{padding:"6px 12px",borderRadius:20,border:"1.5px solid #f59e0b",background:"#fff",color:"#f59e0b",fontSize:12,cursor:"pointer",fontWeight:600}}>{s}</button>
+            ))}
+          </div>
+          <div style={{padding:"12px 16px",display:"flex",gap:8,background:"#fff",borderTop:"1px solid #f0f0f0"}}>
+            <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&enviarMensaje()} placeholder="Preguntame sobre recetas..." style={{flex:1,padding:"12px 16px",borderRadius:12,border:"1.5px solid #e5e5e5",fontSize:14,outline:"none"}}/>
+            <button onClick={enviarMensaje} disabled={cargando||!input.trim()} style={{background:"#f59e0b",color:"#fff",border:"none",borderRadius:12,padding:"12px 16px",fontWeight:700,fontSize:18,cursor:"pointer",opacity:cargando||!input.trim()?0.5:1}}>↑</button>
+          </div>
+        </div>
+      )}
+
+      {/* VISTA LISTA */}
+      {vista==="lista"&&(
+        <div style={{padding:16,flex:1,overflowY:"auto"}}>
+          <div style={{display:"flex",gap:8,marginBottom:16}}>
+            <button onClick={()=>{setSeccion("familia");setFiltroCategoria("Todas");}} style={{flex:1,padding:"10px",borderRadius:12,border:"none",background:seccion==="familia"?"#f59e0b":"#f0f0f0",color:seccion==="familia"?"#fff":"#555",fontWeight:700,cursor:"pointer"}}>👨‍👩‍👦 Familia</button>
+            <button onClick={()=>{setSeccion("francesco");setFiltroCategoria("Todas");}} style={{flex:1,padding:"10px",borderRadius:12,border:"none",background:seccion==="francesco"?"#F7824F":"#f0f0f0",color:seccion==="francesco"?"#fff":"#555",fontWeight:700,cursor:"pointer"}}>👶 Francesco</button>
+          </div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>
+            {categorias.map(c=>(
+              <button key={c} onClick={()=>setFiltroCategoria(c)} style={{padding:"5px 12px",borderRadius:20,border:`1.5px solid ${filtroCategoria===c?(seccion==="familia"?"#f59e0b":"#F7824F"):"#e5e5e5"}`,background:filtroCategoria===c?(seccion==="familia"?"#f59e0b":"#F7824F"):"#fff",color:filtroCategoria===c?"#fff":"#555",fontSize:13,cursor:"pointer",fontWeight:filtroCategoria===c?600:400}}>{c}</button>
+            ))}
+          </div>
+          {filtradas.map(r=>(
+            <div key={r.id} onClick={()=>setRecetaSeleccionada(r)} style={{background:"#fff",borderRadius:14,padding:"16px",marginBottom:10,cursor:"pointer",border:"1px solid #f0f0f0",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                <div style={{flex:1}}>
+                  <div style={{fontWeight:700,fontSize:16,color:"#1a1a2e"}}>{r.nombre}</div>
+                  <div style={{display:"flex",gap:8,marginTop:4}}>
+                    <span style={{fontSize:12,color:"#888"}}>⏱️ {r.tiempo}</span>
+                    <span style={{fontSize:12,background:"#f0f0f0",padding:"2px 8px",borderRadius:10,color:"#666"}}>{r.categoria}</span>
+                  </div>
+                </div>
+                <span style={{color:"#ddd",fontSize:20,marginLeft:8}}>›</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
