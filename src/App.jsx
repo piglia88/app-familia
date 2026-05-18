@@ -482,7 +482,7 @@ function MenuHijo({hijo,setModulo,setHijo,datos,subirFoto}){
 // FIEBRE — mejorada con agrupación por día y gráfico de línea
 // ============================================================
 function ModFiebre({hijo,datos,agregar,borrar}){
-  const [form,setForm]=useState({temp:"",nota:"",meds:[],sintomas:[]});
+  const [form,setForm]=useState({temp:"",nota:"",meds:[],sintomas:[],foto:null});
   const [open,setOpen]=useState(false);
   const [error,setError]=useState("");
   const s=t=>setForm(f=>({...f,...t}));
@@ -493,8 +493,15 @@ function ModFiebre({hijo,datos,agregar,borrar}){
     if(!form.temp||isNaN(t)){setError("Ingresá una temperatura");return;}
     if(t<35||t>42){setError("⚠️ Temperatura fuera de rango (35-42°C)");return;}
     setError("");
-    agregar({temp:t,nota:form.nota,meds:form.meds,sintomas:form.sintomas,ts:hoyISO()});
-    setForm({temp:"",nota:"",meds:[],sintomas:[]});setOpen(false);
+    agregar({temp:t,nota:form.nota,meds:form.meds,sintomas:form.sintomas,foto:form.foto||null,ts:hoyISO()});
+    setForm({temp:"",nota:"",meds:[],sintomas:[],foto:null});setOpen(false);
+  };
+
+  const subirFotoRegistro=async(e)=>{
+    const f=e.target.files[0];
+    if(!f) return;
+    const comprimida=await comprimirFoto(f);
+    setForm(fm=>({...fm,foto:comprimida}));
   };
 
   // Agrupar por día
@@ -564,6 +571,22 @@ function ModFiebre({hijo,datos,agregar,borrar}){
             <div style={{display:"flex",gap:6}}>{MEDICAMENTOS.map(x=><Chip key={x} active={form.meds.includes(x)} onClick={()=>toggle(form.meds,"meds",x)} color={hijo.color}>{x}</Chip>)}</div>
           </div>
           <Inp label="Nota" placeholder="Ej: vomitó, comió poco..." value={form.nota} onChange={e=>s({nota:e.target.value})}/>
+          {/* Foto opcional */}
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:12,color:"#888",display:"block",marginBottom:6}}>📷 Foto (opcional)</label>
+            {form.foto?(
+              <div style={{position:"relative",display:"inline-block"}}>
+                <img src={form.foto} style={{width:120,height:120,objectFit:"cover",borderRadius:10,border:"2px solid #e5e5e5"}} alt="foto"/>
+                <button onClick={()=>s({foto:null})} style={{position:"absolute",top:-8,right:-8,background:"#ef4444",color:"#fff",border:"none",borderRadius:"50%",width:24,height:24,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
+              </div>
+            ):(
+              <label style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",borderRadius:10,border:"1.5px dashed #e5e5e5",cursor:"pointer",color:"#888",fontSize:13,background:"#fafafa"}}>
+                <span style={{fontSize:20}}>📷</span>
+                <span>Sacar foto o elegir de galería</span>
+                <input type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={subirFotoRegistro}/>
+              </label>
+            )}
+          </div>
           <div style={{display:"flex",gap:8}}><Btn onClick={guardar} color={hijo.color} full>Guardar</Btn><Btn onClick={()=>{setOpen(false);setError("");}} secondary>Cancelar</Btn></div>
         </Card>
       )}
@@ -595,6 +618,10 @@ function ModFiebre({hijo,datos,agregar,borrar}){
                         {r.sintomas?.length>0&&<div style={{fontSize:12,color:"#666",marginTop:2}}>{r.sintomas.join(", ")}</div>}
                         {r.meds?.length>0&&<div style={{fontSize:12,color:hijo.color,marginTop:2}}>💊 {r.meds.join(", ")}</div>}
                         {r.nota&&<div style={{fontSize:12,color:"#888",fontStyle:"italic",marginTop:2}}>{r.nota}</div>}
+                  {r.foto&&(
+                    <img src={r.foto} style={{width:80,height:80,objectFit:"cover",borderRadius:8,marginTop:6,border:"1px solid #f0f0f0",cursor:"pointer"}} alt="foto registro"
+                      onClick={e=>{e.stopPropagation();window.open(r.foto,'_blank');}}/>
+                  )}
                       </div>
                       <button onClick={()=>borrar(r.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18}}>×</button>
                     </div>
